@@ -618,18 +618,25 @@ export class KingMycoBot {
   // Button Push Contest Handlers
   private async handleButtonPush(msg: TelegramBot.Message): Promise<void> {
     const chatId = msg.chat.id;
+    const userId = msg.from?.id || chatId;
+
+    const status = this.buttonContest.getCooldownStatus(userId);
+    const statusLine = status.canPush
+      ? '✅ You can push now.'
+      : `⏳ Cooldown: ${status.minutesLeft} minutes left.`;
+
     const message = [
       '🔘 **King Myco Button Push Contest**',
       '',
       'Push the magical button every 30 minutes to earn points!',
       'Compete with the community to reach the top of the leaderboard.',
       '',
-      '💪 Ready to push?',
+      statusLine,
     ].join('\n');
     const options = {
       reply_markup: {
         inline_keyboard: [
-          [{ text: '🔘 PUSH THE BUTTON', callback_data: 'button_push' }],
+          [{ text: status.canPush ? '🔘 PUSH THE BUTTON' : '🔘 Try Again Later', callback_data: 'button_push' }],
           [{ text: '🏆 Leaderboard', callback_data: 'menu_leaderboard' }],
           [{ text: '⬅️ Back', callback_data: 'back_main' }],
         ],
