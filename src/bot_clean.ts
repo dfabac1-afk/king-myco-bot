@@ -679,6 +679,11 @@ export class KingMycoBot {
         const userRank = this.buttonContest.getUserRank(userId);
         const rankMessage = userRank ? `\n\n🏅 Your rank: #${userRank.rank} with ${userRank.clicks} total pushes!` : '';
         await this.bot.sendMessage(chatId, `${result.message}${rankMessage}`);
+        
+        // Display leaderboard after successful push
+        const leaderboard = this.buttonContest.getLeaderboard(10);
+        const leaderboardText = this.buttonContest.formatLeaderboard(leaderboard);
+        await this.bot.sendMessage(chatId, leaderboardText);
       } else {
         await this.bot.sendMessage(chatId, result.message);
       }
