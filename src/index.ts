@@ -1,4 +1,4 @@
-import { KingMycoBot } from './bot';
+import { KingMycoBot } from './bot_clean';
 
 // Use environment variables for production deployment
 const OPENAI_KEY = process.env.OPENAI_KEY || '';
