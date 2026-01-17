@@ -32,6 +32,7 @@ export class KingMycoBot {
       { command: 'mycomeme', description: '😂 Create funny King Myco memes' },
       { command: 'motivate', description: '💪 Get King Myco wisdom & motivation' },
       { command: 'newtocrypto', description: '🌱 Learn crypto basics & Solana for beginners' },
+      { command: 'newtomyco', description: '📘 Learn with Myco — curated lessons' },
       { command: 'educate', description: '🎓 Learn about Solana blockchain' },
       { command: 'ca', description: '🔍 Lookup token by contract address' },
       { command: 'price', description: '💰 Get crypto price' },
@@ -71,6 +72,7 @@ export class KingMycoBot {
     this.bot.onText(/\/mycomeme(@\w+)?(?:\s+(.+))?/i, async (msg, match) => { try { await this.handleMycoMeme(msg, match); } catch (e) { console.error('[MEME] Error:', e); this.bot.sendMessage(msg.chat.id, 'Error: Could not process /mycomeme'); } });
     this.bot.onText(/\/motivate(@\w+)?/i, async (msg) => { try { await this.handleMotivate(msg); } catch (e) { console.error('[MOTIVATE] Error:', e); this.bot.sendMessage(msg.chat.id, 'Error: Could not process /motivate'); } });
     this.bot.onText(/\/newtocrypto(@\w+)?/i, async (msg) => { try { await this.handleNewToCrypto(msg); } catch (e) { console.error('[CRYPTO] Error:', e); this.bot.sendMessage(msg.chat.id, 'Error: Could not process /newtocrypto'); } });
+    this.bot.onText(/\/newtomyco(@\w+)?/i, async (msg) => { try { await this.handleNewToMyco(msg); } catch (e) { console.error('[NEWTOMYCO] Error:', e); this.bot.sendMessage(msg.chat.id, 'Error: Could not process /newtomyco'); } });
     this.bot.onText(/\/educate(@\w+)?(?:\s+(.+))?/i, async (msg, match) => { try { await this.handleEducate(msg, match); } catch (e) { console.error('[EDUCATE] Error:', e); this.bot.sendMessage(msg.chat.id, 'Error: Could not process /educate'); } });
     this.bot.onText(/\/askkingmyco\s+(.+)/, async (msg, match) => { try { await this.handleAskKingMyco(msg, match); } catch (e) { console.error('[ASKKINGMYCO] Error:', e); this.bot.sendMessage(msg.chat.id, 'Error: Could not process /askkingmyco'); } });
     this.bot.onText(/\/xposts(@\w+)?/i, async (msg) => { try { await this.handleXPosts(msg); } catch (e) { console.error('[XPOSTS] Error:', e); this.bot.sendMessage(msg.chat.id, 'Error: Could not process /xposts'); } });
@@ -111,6 +113,7 @@ export class KingMycoBot {
     const options = {
       reply_markup: {
         inline_keyboard: [
+          [{ text: '📘 Learn with Myco', callback_data: 'menu_learnmyco' }],
           [{ text: '🔍 Token Analysis', callback_data: 'menu_token' }],
           [{ text: '📊 Market Data', callback_data: 'menu_market' }],
           [{ text: '🧙 Ask King Myco', callback_data: 'menu_kingmyco' }],
@@ -142,6 +145,9 @@ export class KingMycoBot {
       case 'menu_portfolio':
         this.bot.sendMessage(chatId, '💼 Use /portfolio for tips.');
         break;
+      case 'menu_learnmyco':
+        this.handleNewToMyco({ chat: { id: chatId } } as TelegramBot.Message);
+        break;
       case 'menu_buttonpush':
         this.handleButtonPush({ chat: { id: chatId } } as TelegramBot.Message);
         break;
@@ -151,6 +157,20 @@ export class KingMycoBot {
       case 'button_push':
         console.log(`[BUTTON_PUSH] Attempting to handle button click for user ${query.from?.id}`);
         await this.handleButtonClick(chatId, query.from?.id || 0, query.from?.first_name || 'Anonymous');
+        break;
+      case 'edu_solana':
+      case 'edu_wallets':
+      case 'edu_tokenomics':
+      case 'edu_defi':
+      case 'edu_nfts':
+      case 'edu_gasfees':
+      case 'edu_cycles':
+      case 'edu_staking':
+      case 'edu_hodl':
+      case 'edu_btceth':
+      case 'edu_dexcex':
+      case 'edu_scams':
+        this.handleEducationTopic(chatId, data);
         break;
       case 'back_main':
         this.handleMenu({ chat: { id: chatId } } as TelegramBot.Message);
@@ -486,15 +506,97 @@ export class KingMycoBot {
     this.bot.sendMessage(chatId, msg_text, options);
   }
 
+  private async handleNewToMyco(msg: TelegramBot.Message): Promise<void> {
+    const chatId = msg.chat.id;
+    const options = { reply_markup: { inline_keyboard: [
+      [{ text: '⛓️ Solana Blockchain', callback_data: 'edu_solana' }],
+      [{ text: '🔑 Wallets & Security', callback_data: 'edu_wallets' }],
+      [{ text: '📊 Tokenomics', callback_data: 'edu_tokenomics' }],
+      [{ text: '🏦 DeFi & Contracts', callback_data: 'edu_defi' }],
+      [{ text: '🖼️ NFTs', callback_data: 'edu_nfts' }],
+      [{ text: '⚡ Gas Fees', callback_data: 'edu_gasfees' }],
+      [{ text: '📈 Market Cycles', callback_data: 'edu_cycles' }],
+      [{ text: '🎯 Staking & Yield', callback_data: 'edu_staking' }],
+      [{ text: '💼 HODL vs Trading', callback_data: 'edu_hodl' }],
+      [{ text: '🪙 Bitcoin & Ethereum', callback_data: 'edu_btceth' }],
+      [{ text: '🏪 DEXs & CEXs', callback_data: 'edu_dexcex' }],
+      [{ text: '⚠️ Scams & Rugs', callback_data: 'edu_scams' }],
+      [{ text: '⬅️ Back', callback_data: 'back_main' }],
+    ] } };
+    const msg_text = '📘 **Learn with Myco**\n\nCurated lessons, kept fresh with current market context.\n\nPick a topic:';
+    this.bot.sendMessage(chatId, msg_text, options);
+  }
+
   private async handleEducationTopic(chatId: number, topic: string): Promise<void> {
     const topicMap: { [key: string]: { title: string; prompt: string } } = {
-      edu_solana: { title: '⛓️ Solana Blockchain', prompt: 'Teach a beginner why Solana is revolutionary.' },
-      edu_wallets: { title: '🔑 Wallets & Security', prompt: 'Explain wallets, seed phrases, and best practices.' },
+      edu_solana: {
+        title: '⛓️ Solana Blockchain',
+        prompt: 'Teach a beginner why Solana is revolutionary. Include current context: performance, fees, ecosystem growth, and notable recent developments.'
+      },
+      edu_wallets: {
+        title: '🔑 Wallets & Security',
+        prompt: 'Explain wallets (hot vs cold), seed phrases, private keys, security best practices, common pitfalls, and recent scam trends.'
+      },
+      edu_tokenomics: {
+        title: '📊 Tokenomics',
+        prompt: 'Explain supply, distribution, emissions, burning, staking rewards, FDV vs MC, and how to spot healthy tokenomics with current market examples.'
+      },
+      edu_defi: {
+        title: '🏦 DeFi & Contracts',
+        prompt: 'Introduce DeFi and smart contracts, core primitives (DEXs, lending, staking), composability, and current risks and narratives.'
+      },
+      edu_nfts: {
+        title: '🖼️ NFTs',
+        prompt: 'Explain NFTs: utility, art, gaming, tickets; discuss market maturity, royalties, and current trends.'
+      },
+      edu_gasfees: {
+        title: '⚡ Gas Fees',
+        prompt: 'Explain transaction fees, why Solana is cheaper, congestion, and tips to minimize costs.'
+      },
+      edu_cycles: {
+        title: '📈 Market Cycles',
+        prompt: 'Explain bull/bear cycles, macro drivers, psychology, and positioning through cycles with present context.'
+      },
+      edu_staking: {
+        title: '🎯 Staking & Yield',
+        prompt: 'Explain staking, validators, yield sources, risks of liquid staking, and recent changes in yields.'
+      },
+      edu_hodl: {
+        title: '💼 HODL vs Trading',
+        prompt: 'Contrast long-term conviction vs active trading, time horizons, risk management, and realistic expectations.'
+      },
+      edu_btceth: {
+        title: '🪙 Bitcoin & Ethereum',
+        prompt: 'Teach Bitcoin vs Ethereum: history, purpose, tech differences, and how Solana fits into today’s multi-chain landscape.'
+      },
+      edu_dexcex: {
+        title: '🏪 DEXs & CEXs',
+        prompt: 'Explain decentralized vs centralized exchanges, pros/cons, safety, compliance, and recent events affecting usage.'
+      },
+      edu_scams: {
+        title: '⚠️ Scams & Rugs',
+        prompt: 'Cover common scams, rug pulls, pump-and-dumps, red flags, verification steps, and recent notable incidents.'
+      },
     };
+
     const content = topicMap[topic];
-    if (!content) { this.bot.sendMessage(chatId, '❌ Topic not found.'); return; }
-    const answer = await this.openai.askCryptoQuestion(content.prompt);
-    this.bot.sendMessage(chatId, `${content.title}\n\n${answer}`);
+    if (!content) { this.bot.sendMessage(chatId, '❌ Topic not found. Use /newtomyco to see available topics.'); return; }
+
+    try {
+      this.bot.sendChatAction(chatId, 'typing');
+      const timestamp = new Date().toISOString();
+      const systemPrompt = 'You are King Myco, a stoic and wise mushroom king sorcerer. Teach with measured wisdom, nature metaphors, and dry wit. Never give financial advice. Reference current market conditions when relevant.';
+      const messages: ChatMessage[] = [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: `${content.prompt}\n\nCurrent timestamp: ${timestamp}. Update the explanation to feel current and relevant.` },
+      ];
+      const answer = await this.openai.chat(messages);
+      const formatted = `${content.title}\n\n${answer}\n\n---\n⚠️ This is educational content only. NFA / DYOR.`;
+      this.bot.sendMessage(chatId, formatted);
+    } catch (error) {
+      console.error('Education topic error:', error);
+      this.bot.sendMessage(chatId, '❌ Error generating educational content. Please try again.');
+    }
   }
 
   private async handleXPosts(msg: TelegramBot.Message): Promise<void> {
