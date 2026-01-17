@@ -4,8 +4,11 @@ import { KingMycoBot } from './bot_clean';
 const OPENAI_KEY = process.env.OPENAI_KEY || '';
 const BOT_TOKEN = process.env.BOT_TOKEN || '';
 
+console.log('[INDEX] BOT_TOKEN:', BOT_TOKEN ? `${BOT_TOKEN.substring(0, 20)}...` : 'NOT SET');
+console.log('[INDEX] OPENAI_KEY:', OPENAI_KEY ? `${OPENAI_KEY.substring(0, 20)}...` : 'NOT SET');
+
 if (!OPENAI_KEY || !BOT_TOKEN) {
-	console.error('Missing required environment variables: BOT_TOKEN and OPENAI_KEY');
+	console.error('[INDEX] Missing required environment variables: BOT_TOKEN and OPENAI_KEY');
 	process.exit(1);
 }
 
