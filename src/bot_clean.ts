@@ -53,30 +53,32 @@ export class KingMycoBot {
   }
 
   private setupHandlers(): void {
-    this.bot.onText(/\/start(@\w+)?/i, async (msg) => { try { await this.handleStart(msg); } catch { this.bot.sendMessage(msg.chat.id, 'Error: Could not process /start'); } });
-    this.bot.onText(/\/help/, async (msg) => { try { await this.handleHelp(msg); } catch { this.bot.sendMessage(msg.chat.id, 'Error: Could not process /help'); } });
-    this.bot.onText(/\/menu(@\w+)?/i, async (msg) => { try { await this.handleMenu(msg); } catch { this.bot.sendMessage(msg.chat.id, 'Error: Could not process /menu'); } });
-    this.bot.onText(/\/mycoai(@\w+)?/i, async (msg) => { try { await this.handleKingMycoMenu(msg); } catch { this.bot.sendMessage(msg.chat.id, 'Error: Could not process /mycoai'); } });
-    this.bot.onText(/\/ca\s+(\w+)/, async (msg, match) => { try { await this.handleCALookup(msg, match); } catch { this.bot.sendMessage(msg.chat.id, 'Error: Could not process /ca'); } });
-    this.bot.onText(/\/risk\s+(\w+)/, async (msg, match) => { try { await this.handleRisk(msg, match); } catch { this.bot.sendMessage(msg.chat.id, 'Error: Could not process /risk'); } });
-    this.bot.onText(/\/listings\s+(\w+)/, async (msg, match) => { try { await this.handleListings(msg, match); } catch { this.bot.sendMessage(msg.chat.id, 'Error: Could not process /listings'); } });
-    this.bot.onText(/\/holders\s+(\w+)/, async (msg, match) => { try { await this.handleHolders(msg, match); } catch { this.bot.sendMessage(msg.chat.id, 'Error: Could not process /holders'); } });
-    this.bot.onText(/\/top10%\s+(\w+)/, async (msg, match) => { try { await this.handleTop10Percent(msg, match); } catch { this.bot.sendMessage(msg.chat.id, 'Error: Could not process /top10%'); } });
-    this.bot.onText(/\/price\s+([A-Za-z0-9]+)/, async (msg, match) => { try { await this.handlePrice(msg, match); } catch { this.bot.sendMessage(msg.chat.id, 'Error: Could not process /price'); } });
-    this.bot.onText(/\/volume\s+(\w+)/, async (msg, match) => { try { await this.handleVolume(msg, match); } catch { this.bot.sendMessage(msg.chat.id, 'Error: Could not process /volume'); } });
-    this.bot.onText(/\/chart\s+(\w+)/, async (msg, match) => { try { await this.handleChart(msg, match); } catch { this.bot.sendMessage(msg.chat.id, 'Error: Could not process /chart'); } });
-    this.bot.onText(/\/trending/, async (msg) => { try { await this.handleTrending(msg); } catch { this.bot.sendMessage(msg.chat.id, 'Error: Could not process /trending'); } });
-    this.bot.onText(/\/portfolio/, async (msg) => { try { await this.handlePortfolio(msg); } catch { this.bot.sendMessage(msg.chat.id, 'Error: Could not process /portfolio'); } });
-    this.bot.onText(/\/mycomeme(@\w+)?(?:\s+(.+))?/i, async (msg, match) => { try { await this.handleMycoMeme(msg, match); } catch { this.bot.sendMessage(msg.chat.id, 'Error: Could not process /mycomeme'); } });
-    this.bot.onText(/\/motivate(@\w+)?/i, async (msg) => { try { await this.handleMotivate(msg); } catch { this.bot.sendMessage(msg.chat.id, 'Error: Could not process /motivate'); } });
-    this.bot.onText(/\/newtocrypto(@\w+)?/i, async (msg) => { try { await this.handleNewToCrypto(msg); } catch { this.bot.sendMessage(msg.chat.id, 'Error: Could not process /newtocrypto'); } });
-    this.bot.onText(/\/educate(@\w+)?(?:\s+(.+))?/i, async (msg, match) => { try { await this.handleEducate(msg, match); } catch { this.bot.sendMessage(msg.chat.id, 'Error: Could not process /educate'); } });
-    this.bot.onText(/\/askkingmyco\s+(.+)/, async (msg, match) => { try { await this.handleAskKingMyco(msg, match); } catch { this.bot.sendMessage(msg.chat.id, 'Error: Could not process /askkingmyco'); } });
-    this.bot.onText(/\/xposts(@\w+)?/i, async (msg) => { try { await this.handleXPosts(msg); } catch { this.bot.sendMessage(msg.chat.id, 'Error: Could not process /xposts'); } });
-    this.bot.onText(/\/buttonpush(@\w+)?/i, async (msg) => { try { await this.handleButtonPush(msg); } catch { this.bot.sendMessage(msg.chat.id, 'Error: Could not process /buttonpush'); } });
-    this.bot.onText(/\/leaderboard(@\w+)?/i, async (msg) => { try { await this.handleLeaderboard(msg); } catch { this.bot.sendMessage(msg.chat.id, 'Error: Could not process /leaderboard'); } });
-    this.bot.on('callback_query', async (query) => { try { await this.handleCallbackQuery(query); } catch { this.bot.sendMessage(query.message?.chat.id || 0, 'Error: Could not process button.'); } });
-    this.bot.on('message', async (msg) => { try { await this.handleMessage(msg); } catch { this.bot.sendMessage(msg.chat.id, 'Error: Could not process message.'); } });
+    console.log('[SETUP] Registering command handlers...');
+    this.bot.onText(/\/start(@\w+)?/i, async (msg) => { try { await this.handleStart(msg); } catch (e) { console.error('[START] Error:', e); this.bot.sendMessage(msg.chat.id, 'Error: Could not process /start'); } });
+    this.bot.onText(/\/help/, async (msg) => { try { await this.handleHelp(msg); } catch (e) { console.error('[HELP] Error:', e); this.bot.sendMessage(msg.chat.id, 'Error: Could not process /help'); } });
+    this.bot.onText(/\/menu(@\w+)?/i, async (msg) => { try { await this.handleMenu(msg); } catch (e) { console.error('[MENU] Error:', e); this.bot.sendMessage(msg.chat.id, 'Error: Could not process /menu'); } });
+    this.bot.onText(/\/mycoai(@\w+)?/i, async (msg) => { try { await this.handleKingMycoMenu(msg); } catch (e) { console.error('[MYCOAI] Error:', e); this.bot.sendMessage(msg.chat.id, 'Error: Could not process /mycoai'); } });
+    this.bot.onText(/\/ca\s+(\w+)/, async (msg, match) => { try { await this.handleCALookup(msg, match); } catch (e) { console.error('[CA] Error:', e); this.bot.sendMessage(msg.chat.id, 'Error: Could not process /ca'); } });
+    this.bot.onText(/\/risk\s+(\w+)/, async (msg, match) => { try { await this.handleRisk(msg, match); } catch (e) { console.error('[RISK] Error:', e); this.bot.sendMessage(msg.chat.id, 'Error: Could not process /risk'); } });
+    this.bot.onText(/\/listings\s+(\w+)/, async (msg, match) => { try { await this.handleListings(msg, match); } catch (e) { console.error('[LISTINGS] Error:', e); this.bot.sendMessage(msg.chat.id, 'Error: Could not process /listings'); } });
+    this.bot.onText(/\/holders\s+(\w+)/, async (msg, match) => { try { await this.handleHolders(msg, match); } catch (e) { console.error('[HOLDERS] Error:', e); this.bot.sendMessage(msg.chat.id, 'Error: Could not process /holders'); } });
+    this.bot.onText(/\/top10%\s+(\w+)/, async (msg, match) => { try { await this.handleTop10Percent(msg, match); } catch (e) { console.error('[TOP10] Error:', e); this.bot.sendMessage(msg.chat.id, 'Error: Could not process /top10%'); } });
+    this.bot.onText(/\/price\s+([A-Za-z0-9]+)/, async (msg, match) => { try { await this.handlePrice(msg, match); } catch (e) { console.error('[PRICE] Error:', e); this.bot.sendMessage(msg.chat.id, 'Error: Could not process /price'); } });
+    this.bot.onText(/\/volume\s+(\w+)/, async (msg, match) => { try { await this.handleVolume(msg, match); } catch (e) { console.error('[VOLUME] Error:', e); this.bot.sendMessage(msg.chat.id, 'Error: Could not process /volume'); } });
+    this.bot.onText(/\/chart\s+(\w+)/, async (msg, match) => { try { await this.handleChart(msg, match); } catch (e) { console.error('[CHART] Error:', e); this.bot.sendMessage(msg.chat.id, 'Error: Could not process /chart'); } });
+    this.bot.onText(/\/trending/, async (msg) => { try { await this.handleTrending(msg); } catch (e) { console.error('[TRENDING] Error:', e); this.bot.sendMessage(msg.chat.id, 'Error: Could not process /trending'); } });
+    this.bot.onText(/\/portfolio/, async (msg) => { try { await this.handlePortfolio(msg); } catch (e) { console.error('[PORTFOLIO] Error:', e); this.bot.sendMessage(msg.chat.id, 'Error: Could not process /portfolio'); } });
+    this.bot.onText(/\/mycomeme(@\w+)?(?:\s+(.+))?/i, async (msg, match) => { try { await this.handleMycoMeme(msg, match); } catch (e) { console.error('[MEME] Error:', e); this.bot.sendMessage(msg.chat.id, 'Error: Could not process /mycomeme'); } });
+    this.bot.onText(/\/motivate(@\w+)?/i, async (msg) => { try { await this.handleMotivate(msg); } catch (e) { console.error('[MOTIVATE] Error:', e); this.bot.sendMessage(msg.chat.id, 'Error: Could not process /motivate'); } });
+    this.bot.onText(/\/newtocrypto(@\w+)?/i, async (msg) => { try { await this.handleNewToCrypto(msg); } catch (e) { console.error('[CRYPTO] Error:', e); this.bot.sendMessage(msg.chat.id, 'Error: Could not process /newtocrypto'); } });
+    this.bot.onText(/\/educate(@\w+)?(?:\s+(.+))?/i, async (msg, match) => { try { await this.handleEducate(msg, match); } catch (e) { console.error('[EDUCATE] Error:', e); this.bot.sendMessage(msg.chat.id, 'Error: Could not process /educate'); } });
+    this.bot.onText(/\/askkingmyco\s+(.+)/, async (msg, match) => { try { await this.handleAskKingMyco(msg, match); } catch (e) { console.error('[ASKKINGMYCO] Error:', e); this.bot.sendMessage(msg.chat.id, 'Error: Could not process /askkingmyco'); } });
+    this.bot.onText(/\/xposts(@\w+)?/i, async (msg) => { try { await this.handleXPosts(msg); } catch (e) { console.error('[XPOSTS] Error:', e); this.bot.sendMessage(msg.chat.id, 'Error: Could not process /xposts'); } });
+    this.bot.onText(/\/buttonpush(@\w+)?/i, async (msg) => { try { console.log('[BUTTONPUSH] Command triggered'); await this.handleButtonPush(msg); } catch (e) { console.error('[BUTTONPUSH] Error:', e); this.bot.sendMessage(msg.chat.id, 'Error: Could not process /buttonpush'); } });
+    this.bot.onText(/\/leaderboard(@\w+)?/i, async (msg) => { try { await this.handleLeaderboard(msg); } catch (e) { console.error('[LEADERBOARD] Error:', e); this.bot.sendMessage(msg.chat.id, 'Error: Could not process /leaderboard'); } });
+    this.bot.on('callback_query', async (query) => { try { await this.handleCallbackQuery(query); } catch (e) { console.error('[CALLBACK] Error:', e); this.bot.sendMessage(query.message?.chat.id || 0, 'Error: Could not process button.'); } });
+    this.bot.on('message', async (msg) => { try { await this.handleMessage(msg); } catch (e) { console.error('[MESSAGE] Error:', e); this.bot.sendMessage(msg.chat.id, 'Error: Could not process message.'); } });
+    console.log('[SETUP] Handlers registered successfully');
   }
 
   private async handleStart(msg: TelegramBot.Message): Promise<void> {
@@ -130,6 +132,7 @@ export class KingMycoBot {
   private async handleCallbackQuery(query: TelegramBot.CallbackQuery): Promise<void> {
     const chatId = query.message?.chat.id!;
     const data = query.data;
+    console.log(`[CALLBACK] Data: ${data}, ChatID: ${chatId}, UserID: ${query.from?.id}`);
     this.bot.answerCallbackQuery(query.id);
 
     switch (data) {
@@ -152,11 +155,14 @@ export class KingMycoBot {
         this.handleLeaderboard({ chat: { id: chatId } } as TelegramBot.Message);
         break;
       case 'button_push':
-        this.handleButtonClick(chatId, query.from.id, query.from.first_name || 'Anonymous');
+        console.log(`[BUTTON_PUSH] Attempting to handle button click for user ${query.from?.id}`);
+        await this.handleButtonClick(chatId, query.from?.id || 0, query.from?.first_name || 'Anonymous');
         break;
       case 'back_main':
         this.handleMenu({ chat: { id: chatId } } as TelegramBot.Message);
         break;
+      default:
+        console.log(`[CALLBACK] Unhandled callback data: ${data}`);
     }
   }
 
@@ -508,13 +514,21 @@ export class KingMycoBot {
   }
 
   private async handleButtonClick(chatId: number, userId: number, userName: string): Promise<void> {
-    const result = this.buttonContest.addClick(userId, userName);
-    if (result.success) {
-      const userRank = this.buttonContest.getUserRank(userId);
-      const rankMessage = userRank ? `\n\n🏅 Your rank: #${userRank.rank} with ${userRank.clicks} total pushes!` : '';
-      this.bot.sendMessage(chatId, `${result.message}${rankMessage}`);
-    } else {
-      this.bot.sendMessage(chatId, result.message);
+    try {
+      console.log(`[BUTTON_CLICK] User ${userId} (${userName}) pushing button in chat ${chatId}`);
+      const result = this.buttonContest.addClick(userId, userName);
+      console.log(`[BUTTON_CLICK] Result:`, result);
+      
+      if (result.success) {
+        const userRank = this.buttonContest.getUserRank(userId);
+        const rankMessage = userRank ? `\n\n🏅 Your rank: #${userRank.rank} with ${userRank.clicks} total pushes!` : '';
+        await this.bot.sendMessage(chatId, `${result.message}${rankMessage}`);
+      } else {
+        await this.bot.sendMessage(chatId, result.message);
+      }
+    } catch (error) {
+      console.error('[BUTTON_CLICK] Error:', error);
+      this.bot.sendMessage(chatId, '❌ Error processing button click.');
     }
   }
 
