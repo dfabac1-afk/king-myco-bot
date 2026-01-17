@@ -158,6 +158,29 @@ export class KingMycoBot {
         console.log(`[BUTTON_PUSH] Attempting to handle button click for user ${query.from?.id}`);
         await this.handleButtonClick(chatId, query.from?.id || 0, query.from?.first_name || 'Anonymous');
         break;
+      case 'refresh_status': {
+        const userId = query.from?.id || chatId;
+        const status = this.buttonContest.getCooldownStatus(userId);
+        const statusLine = status.canPush ? '✅ You can push now.' : `⏳ Cooldown: ${status.minutesLeft} minutes left.`;
+        const message = [
+          '🔘 **King Myco Button Push Contest**',
+          '',
+          'Push the magical button every 30 minutes to earn points!',
+          'Compete with the community to reach the top of the leaderboard.',
+          '',
+          statusLine,
+        ].join('\n');
+        const keyboard = {
+          inline_keyboard: [
+            [{ text: status.canPush ? '🔘 PUSH THE BUTTON' : '🔘 Try Again Later', callback_data: 'button_push' }],
+            [{ text: '🔄 Refresh Status', callback_data: 'refresh_status' }],
+            [{ text: '🏆 Leaderboard', callback_data: 'menu_leaderboard' }],
+            [{ text: '⬅️ Back', callback_data: 'back_main' }],
+          ],
+        } as TelegramBot.InlineKeyboardMarkup;
+        this.bot.editMessageText(message, { chat_id: chatId, message_id: query.message?.message_id, reply_markup: keyboard });
+        break;
+      }
       case 'edu_solana':
       case 'edu_wallets':
       case 'edu_tokenomics':
@@ -637,6 +660,7 @@ export class KingMycoBot {
       reply_markup: {
         inline_keyboard: [
           [{ text: status.canPush ? '🔘 PUSH THE BUTTON' : '🔘 Try Again Later', callback_data: 'button_push' }],
+          [{ text: '🔄 Refresh Status', callback_data: 'refresh_status' }],
           [{ text: '🏆 Leaderboard', callback_data: 'menu_leaderboard' }],
           [{ text: '⬅️ Back', callback_data: 'back_main' }],
         ],
