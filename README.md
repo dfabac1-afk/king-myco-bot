@@ -1,0 +1,119 @@
+# King Myco AI Telegram Bot
+
+A TypeScript-based Telegram bot powered by OpenAI GPT-4, bringing stoic wisdom and crypto insights to your community. King Myco is a wise mushroom sorcerer who educates, analyzes, and entertains with dry wit and nature-inspired metaphors.
+
+## Features
+- 🧙 **King Myco Persona** - Stoic mushroom sorcerer with wise, measured responses
+- 🤖 **AI-Powered** - OpenAI GPT-4 integration for intelligent conversations
+- 📊 **Crypto Analysis** - Live Solana token data via DexScreener API
+- 📚 **Education** - 12 interactive crypto/Solana learning modules
+- 😂 **Meme Generator** - 6 types of crypto memes in King Myco's style
+- 𝕏 **X Post Generator** - Unique social media content about $MYCO
+- 💡 **Motivation** - Daily wisdom and diamond hands encouragement
+- 🔍 **Token Lookup** - CA analysis, risk assessment, trending coins
+
+## Quick Start (Local Development)
+
+1. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+2. **Build the project:**
+   ```bash
+   npm run build
+   ```
+
+3. **Run locally:**
+   ```bash
+   npm run dev
+   ```
+
+## Deploy to Cloud (24/7 Hosting)
+
+**Want your bot to run 24/7 even when your computer is off?**
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed instructions on deploying to:
+- **Railway** (Recommended - Free tier, easiest)
+- **Render** (Also free tier)
+- **DigitalOcean** (More control, $5/month)
+
+## Environment Variables
+
+For production deployment, set these in your hosting platform:
+
+```bash
+BOT_TOKEN=your_telegram_bot_token
+OPENAI_KEY=your_openai_api_key
+```
+
+## Bot Commands
+
+### Main Commands
+- `/start` - Welcome message with interactive menu
+- `/help` - Command reference
+- `/menu` - Main interactive menu
+
+### King Myco Commands
+- `/mycoai` - King Myco coin information
+- `/askkingmyco <question>` - Ask King Myco for wisdom
+- `/motivate` - Get motivational wisdom
+- `/xposts` - Generate X (Twitter) posts about $MYCO
+
+### Education Commands
+- `/newtocrypto` - Interactive learning menu (12 topics)
+- `/educate <topic>` - Learn about Solana/crypto topics
+- `/mycomeme` - Generate funny crypto memes (6 types)
+
+### Market Data Commands
+- `/ca <address>` - Lookup Solana token by contract address
+- `/price <symbol>` - Get crypto price
+- `/volume <symbol>` - Get 24h trading volume
+- `/chart <symbol>` - Technical analysis
+- `/trending` - Top 5 trending Solana coins
+- `/risk <address>` - Analyze token risk factors
+- `/holders <address>` - Check holder distribution
+
+## Project Structure
+
+```
+src/
+  ├── index.ts              # Entry point
+  ├── bot.ts                # Main bot logic & command handlers
+  ├── types.ts              # TypeScript type definitions
+  └── services/
+      ├── openai.ts         # OpenAI GPT-4 integration
+      ├── dexscreener.ts    # DexScreener API wrapper
+      ├── dexscreener-api.ts        # Token data fetching
+      └── dexscreener-trending.ts   # Trending tokens
+```
+
+## King Myco Persona
+
+King Myco speaks with:
+- 🍄 Stoic wisdom and ancient perspective
+- 🧘 Measured, deliberate language
+- 🌱 Nature-inspired metaphors (mycelium, growth cycles, fungal wisdom)
+- 😏 Dry, understated humor
+- ⚖️ Balanced perspective (never predictions or financial advice)
+
+## Contributing
+
+This bot is designed for the King Myco community. Always remember:
+- ⚠️ All responses include "NFA - Not Financial Advice"
+- 🔒 Never share seed phrases or private keys
+- 🧠 Educate, don't speculate
+
+## Notes
+
+- **Not Financial Advice** - All market analysis is educational only
+- **One Instance Only** - Run either locally OR on cloud, not both (avoid 409 errors)
+- **Rate Limits** - OpenAI and DexScreener APIs have rate limits
+
+## License
+
+MIT
+
+---
+
+**Built with wisdom by the King Myco community** 🍄👑
