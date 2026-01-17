@@ -19,15 +19,32 @@ A TypeScript-based Telegram bot powered by OpenAI GPT-4, bringing stoic wisdom a
    npm install
    ```
 
-2. **Build the project:**
+2. **Set environment variables:**
+   
+   **Windows PowerShell:**
+   ```powershell
+   $env:BOT_TOKEN = "your_telegram_bot_token_here"
+   $env:OPENAI_KEY = "your_openai_api_key_here"
+   ```
+   
+   **macOS/Linux:**
    ```bash
-   npm run build
+   export BOT_TOKEN="your_telegram_bot_token_here"
+   export OPENAI_KEY="your_openai_api_key_here"
    ```
 
-3. **Run locally:**
+3. **Run in development mode:**
    ```bash
    npm run dev
    ```
+   
+   Or build and run production:
+   ```bash
+   npm run build
+   npm start
+   ```
+
+> **Note:** The bot requires `BOT_TOKEN` and `OPENAI_KEY` environment variables. Get your Telegram bot token from [@BotFather](https://t.me/botfather) and OpenAI API key from [platform.openai.com](https://platform.openai.com).
 
 ## Deploy to Cloud (24/7 Hosting)
 
@@ -73,6 +90,11 @@ OPENAI_KEY=your_openai_api_key
 - `/trending` - Top 5 trending Solana coins
 - `/risk <address>` - Analyze token risk factors
 - `/holders <address>` - Check holder distribution
+
+### Community & Fun
+- `/buttonpush` - Join the button push contest (30-minute cooldown)
+- `/leaderboard` - View top 10 button pushers
+- `/portfolio` - Portfolio management tips
 
 ## Project Structure
 

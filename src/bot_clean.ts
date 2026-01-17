@@ -621,7 +621,7 @@ export class KingMycoBot {
     const message = [
       '🔘 **King Myco Button Push Contest**',
       '',
-      'Push the magical button every 8 hours to earn points!',
+      'Push the magical button every 30 minutes to earn points!',
       'Compete with the community to reach the top of the leaderboard.',
       '',
       '💪 Ready to push?',

@@ -7,7 +7,7 @@ export interface ButtonPusher {
 
 export class ButtonContestService {
   private pushers: Map<number, ButtonPusher> = new Map();
-  private readonly COOLDOWN_MS = 8 * 60 * 60 * 1000; // 8 hours
+  private readonly COOLDOWN_MS = 30 * 60 * 1000; // 30 minutes
 
   addClick(userId: number, userName: string): { success: boolean; message: string; cooldownMinutes?: number } {
     const now = Date.now();
@@ -60,7 +60,7 @@ export class ButtonContestService {
       board += `${medal} #${index + 1} - **${pusher.name}** - ${pusher.clicks} pushes\n`;
     });
 
-    board += '\n💪 Can you reach the top? Push the button every 8 hours!';
+    board += '\n💪 Can you reach the top? Push the button every 30 minutes!';
     return board;
   }
 
