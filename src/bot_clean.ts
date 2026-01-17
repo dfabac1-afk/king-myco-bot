@@ -107,22 +107,16 @@ export class KingMycoBot {
 
   private async handleMenu(msg: TelegramBot.Message): Promise<void> {
     const chatId = msg.chat.id;
-    const menuMessage = '🎯 King Myco AI - Main Menu\nChoose a category:';
+    const menuMessage = '🎯 **King Myco AI - Main Menu**\n\nChoose a category:';
     const options = {
       reply_markup: {
         inline_keyboard: [
-          [
-            { text: '🔍 Token Analysis', callback_data: 'menu_token' },
-            { text: '📊 Market Data', callback_data: 'menu_market' },
-          ],
-          [
-            { text: '🧙 Ask King Myco', callback_data: 'menu_kingmyco' },
-            { text: '💼 Portfolio', callback_data: 'menu_portfolio' },
-          ],
-          [
-            { text: '🔘 Button Push', callback_data: 'menu_buttonpush' },
-            { text: '🏆 Leaderboard', callback_data: 'menu_leaderboard' },
-          ],
+          [{ text: '🔍 Token Analysis', callback_data: 'menu_token' }],
+          [{ text: '📊 Market Data', callback_data: 'menu_market' }],
+          [{ text: '🧙 Ask King Myco', callback_data: 'menu_kingmyco' }],
+          [{ text: '💼 Portfolio', callback_data: 'menu_portfolio' }],
+          [{ text: '🔘 Button Push', callback_data: 'menu_buttonpush' }],
+          [{ text: '🏆 Leaderboard', callback_data: 'menu_leaderboard' }],
         ],
       },
     } as TelegramBot.SendMessageOptions;
@@ -168,31 +162,46 @@ export class KingMycoBot {
 
   private showTokenMenu(chatId: number): void {
     const message = [
-      '🔍 Token Analysis Tools',
-      '/ca <address> - Full token overview',
+      '🔍 **Token Analysis Tools**',
+      '',
+      '📌 Quick Commands:',
+      '/ca <address> - Full overview',
       '/risk <address> - Risk analysis',
-      '/holders <address> - Holder distribution',
+      '/holders <address> - Holders',
+      '/top10% <address> - Top 10% holders',
     ].join('\n');
-    const options = { reply_markup: { inline_keyboard: [[{ text: '🔙 Back to Menu', callback_data: 'back_main' }]] } };
+    const options = { reply_markup: { inline_keyboard: [[{ text: '⬅️ Back', callback_data: 'back_main' }]] } };
     this.bot.sendMessage(chatId, message, options);
   }
 
   private showMarketMenu(chatId: number): void {
     const message = [
-      '📊 Market Data & Analysis',
-      '/price <symbol> - Get crypto price',
-      '/trending - Top 10 trending Solana coins',
+      '📊 **Market Data & Analysis**',
+      '',
+      '📌 Quick Commands:',
+      '/price <symbol> - Get price',
+      '/volume <symbol> - Trading volume',
+      '/chart <symbol> - Chart analysis',
+      '/trending - Top trending coins',
     ].join('\n');
-    const options = { reply_markup: { inline_keyboard: [[{ text: '🔙 Back to Menu', callback_data: 'back_main' }]] } };
+    const options = { reply_markup: { inline_keyboard: [[{ text: '⬅️ Back', callback_data: 'back_main' }]] } };
     this.bot.sendMessage(chatId, message, options);
   }
 
   private showKingMycoMenu(chatId: number): void {
     const kingMycoMessage = [
-      '🧙 Ask King Myco',
+      '🧙 **Ask King Myco**',
+      '',
+      'The mushroom king sorcerer awaits your questions...',
+      '',
       'Use: /askkingmyco <your question>',
+      '',
+      'Examples:',
+      '• What\'s your wisdom?',
+      '• Tell me about DeFi',
+      '• How should I invest?',
     ].join('\n');
-    const options = { reply_markup: { inline_keyboard: [[{ text: '🔙 Back to Main Menu', callback_data: 'back_main' }]] } };
+    const options = { reply_markup: { inline_keyboard: [[{ text: '⬅️ Back', callback_data: 'back_main' }]] } };
     this.bot.sendMessage(chatId, kingMycoMessage, options);
   }
 
@@ -461,9 +470,20 @@ export class KingMycoBot {
     const options = { reply_markup: { inline_keyboard: [
       [{ text: '⛓️ Solana Blockchain', callback_data: 'edu_solana' }],
       [{ text: '🔑 Wallets & Security', callback_data: 'edu_wallets' }],
-      [{ text: '🔙 Back to Menu', callback_data: 'back_main' }],
+      [{ text: '📊 Tokenomics', callback_data: 'edu_tokenomics' }],
+      [{ text: '🏦 DeFi & Contracts', callback_data: 'edu_defi' }],
+      [{ text: '🖼️ NFTs', callback_data: 'edu_nfts' }],
+      [{ text: '⚡ Gas Fees', callback_data: 'edu_gasfees' }],
+      [{ text: '📈 Market Cycles', callback_data: 'edu_cycles' }],
+      [{ text: '🎯 Staking & Yield', callback_data: 'edu_staking' }],
+      [{ text: '💼 HODL vs Trading', callback_data: 'edu_hodl' }],
+      [{ text: '🪙 Bitcoin & Ethereum', callback_data: 'edu_btceth' }],
+      [{ text: '🏪 DEXs & CEXs', callback_data: 'edu_dexcex' }],
+      [{ text: '⚠️ Scams & Rugs', callback_data: 'edu_scams' }],
+      [{ text: '⬅️ Back', callback_data: 'back_main' }],
     ] } };
-    this.bot.sendMessage(chatId, '🌱 King Myco\'s Academy', options);
+    const msg_text = '🌱 **King Myco\'s Academy**\n\nChoose a topic to learn about crypto & Solana:\n\n⚠️ Remember: This is educational content, NOT financial advice (NFA). Always DYOR!';
+    this.bot.sendMessage(chatId, msg_text, options);
   }
 
   private async handleEducationTopic(chatId: number, topic: string): Promise<void> {
@@ -497,16 +517,19 @@ export class KingMycoBot {
   private async handleButtonPush(msg: TelegramBot.Message): Promise<void> {
     const chatId = msg.chat.id;
     const message = [
-      '🔘 King Myco Button Push Contest',
+      '🔘 **King Myco Button Push Contest**',
+      '',
       'Push the magical button every 8 hours to earn points!',
       'Compete with the community to reach the top of the leaderboard.',
+      '',
+      '💪 Ready to push?',
     ].join('\n');
     const options = {
       reply_markup: {
         inline_keyboard: [
           [{ text: '🔘 PUSH THE BUTTON', callback_data: 'button_push' }],
-          [{ text: '🏆 View Leaderboard', callback_data: 'menu_leaderboard' }],
-          [{ text: '🔙 Back to Menu', callback_data: 'back_main' }],
+          [{ text: '🏆 Leaderboard', callback_data: 'menu_leaderboard' }],
+          [{ text: '⬅️ Back', callback_data: 'back_main' }],
         ],
       },
     } as TelegramBot.SendMessageOptions;
@@ -539,8 +562,8 @@ export class KingMycoBot {
     const options = {
       reply_markup: {
         inline_keyboard: [
-          [{ text: '🔘 Push Button Now', callback_data: 'button_push' }],
-          [{ text: '🔙 Back to Menu', callback_data: 'back_main' }],
+          [{ text: '🔘 Push Button', callback_data: 'button_push' }],
+          [{ text: '⬅️ Back', callback_data: 'back_main' }],
         ],
       },
     } as TelegramBot.SendMessageOptions;
