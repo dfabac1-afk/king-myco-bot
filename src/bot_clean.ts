@@ -719,14 +719,14 @@ export class KingMycoBot {
     const chatId = msg.chat.id;
     try {
       if (!this.supabase) {
-        this.bot.sendMessage(chatId, '❌ Spore leaderboard is not available. Supabase is not initialized.');
+        this.bot.sendMessage(chatId, '⚠️ Spore system is not available yet. Please ensure Supabase is properly configured and database tables are created.\n\nRun `supabase-setup.sql` in your Supabase dashboard to initialize the database.');
         return;
       }
 
       const leaderboard = await this.supabase.getLeaderboard(10);
       
       if (!leaderboard || leaderboard.length === 0) {
-        this.bot.sendMessage(chatId, '📊 **Spore Leaderboard**\n\nNo users have earned spores yet. Be the first! 🚀');
+        this.bot.sendMessage(chatId, '📊 **Spore Leaderboard**\n\nNo users have earned spores yet. Be the first to complete a quest and earn spores! 🚀\n\nUse /help to see available commands.');
         return;
       }
 
@@ -756,7 +756,7 @@ export class KingMycoBot {
       this.bot.sendMessage(chatId, leaderboardText, options);
     } catch (error) {
       console.error('Spore leaderboard error:', error);
-      this.bot.sendMessage(chatId, '❌ Error loading spore leaderboard. Try again later.');
+      this.bot.sendMessage(chatId, '❌ Error loading spore leaderboard.\n\nThis could mean:\n• Database tables are not initialized\n• Run `supabase-setup.sql` in Supabase\n• Or check if your Supabase credentials are correct');
     }
   }
 
