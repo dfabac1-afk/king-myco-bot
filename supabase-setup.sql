@@ -1,44 +1,92 @@
--- Supabase Database Setup for King Myco Integration
+-- Supabase Database Setup for King Myco Web3 Integration
 
--- User Profiles table
+-- User Profiles table (wallet-based)
 CREATE TABLE IF NOT EXISTS user_profiles (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  userId BIGINT UNIQUE NOT NULL,
+  walletAddress TEXT UNIQUE NOT NULL,
+  telegramUserId BIGINT UNIQUE,
   telegramName TEXT,
   totalSpores INT DEFAULT 0,
   questsCompleted INT DEFAULT 0,
   buttonPushes INT DEFAULT 0,
+  chainId INT DEFAULT 501,
+  nonce TEXT,
+  isVerified BOOLEAN DEFAULT FALSE,
+  lastActiveAt TIMESTAMP DEFAULT NOW(),
   createdAt TIMESTAMP DEFAULT NOW(),
   updatedAt TIMESTAMP DEFAULT NOW()
 );
 
--- Quests table
+-- Quests table (Web3-based)
 CREATE TABLE IF NOT EXISTS quests (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  userId BIGINT NOT NULL,
+  walletAddress TEXT NOT NULL,
   title TEXT NOT NULL,
   description TEXT,
   reward INT NOT NULL,
+  questType TEXT DEFAULT 'general',
+  contractAddress TEXT,
+  chainId INT DEFAULT 501,
+  started BOOLEAN DEFAULT FALSE,
   completed BOOLEAN DEFAULT FALSE,
   completedAt TIMESTAMP,
+  participationProof TEXT,
+  transactionHash TEXT,
   createdAt TIMESTAMP DEFAULT NOW(),
-  FOREIGN KEY (userId) REFERENCES user_profiles(userId) ON DELETE CASCADE
+  FOREIGN KEY (walletAddress) REFERENCES user_profiles(walletAddress) ON DELETE CASCADE
 );
 
--- Spore transactions log (audit trail)
+-- Wallet connections (support for multiple wallets per user if needed)
+CREATE TABLE IF NOT EXISTS wallet_connections (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  userId UUID NOT NULL,
+  walletAddress TEXT NOT NULL,
+  chainId INT DEFAULT 501,
+  verificationSignature TEXT,
+  isVerified BOOLEAN DEFAULT FALSE,
+  connectedAt TIMESTAMP DEFAULT NOW(),
+  FOREIGN KEY (userId) REFERENCES user_profiles(id) ON DELETE CASCADE,
+  UNIQUE(userId, walletAddress, chainId)
+);
+
+-- Spore transactions log (audit trail with wallet)
 CREATE TABLE IF NOT EXISTS spore_transactions (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  userId BIGINT NOT NULL,
+  walletAddress TEXT NOT NULL,
   amount INT NOT NULL,
   reason TEXT,
+  questId UUID,
+  transactionHash TEXT,
+  chainId INT DEFAULT 501,
   timestamp TIMESTAMP DEFAULT NOW(),
-  FOREIGN KEY (userId) REFERENCES user_profiles(userId) ON DELETE CASCADE
+  FOREIGN KEY (walletAddress) REFERENCES user_profiles(walletAddress) ON DELETE CASCADE,
+  FOREIGN KEY (questId) REFERENCES quests(id) ON DELETE SET NULL
+);
+
+-- On-chain proof of participation
+CREATE TABLE IF NOT EXISTS participation_proofs (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  questId UUID NOT NULL,
+  walletAddress TEXT NOT NULL,
+  proofType TEXT,
+  proofData JSONB,
+  transactionHash TEXT,
+  verified BOOLEAN DEFAULT FALSE,
+  chainId INT DEFAULT 501,
+  createdAt TIMESTAMP DEFAULT NOW(),
+  FOREIGN KEY (questId) REFERENCES quests(id) ON DELETE CASCADE,
+  FOREIGN KEY (walletAddress) REFERENCES user_profiles(walletAddress) ON DELETE CASCADE
 );
 
 -- Indexes for performance
 CREATE INDEX idx_user_profiles_spores ON user_profiles(totalSpores DESC);
-CREATE INDEX idx_quests_user_completed ON quests(userId, completed);
-CREATE INDEX idx_spore_transactions_user ON spore_transactions(userId);
+CREATE INDEX idx_user_profiles_wallet ON user_profiles(walletAddress);
+CREATE INDEX idx_user_profiles_telegram ON user_profiles(telegramUserId);
+CREATE INDEX idx_quests_wallet_completed ON quests(walletAddress, completed);
+CREATE INDEX idx_quests_contract ON quests(contractAddress, chainId);
+CREATE INDEX idx_spore_transactions_wallet ON spore_transactions(walletAddress);
+CREATE INDEX idx_participation_proofs_quest ON participation_proofs(questId);
+CREATE INDEX idx_wallet_connections_address ON wallet_connections(walletAddress);
 
 -- RLS Policies (if using Row Level Security)
 ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;

@@ -2,15 +2,15 @@ import express, { Request, Response } from 'express';
 
 export interface ApiServerConfig {
   port: number;
-  apiKey: string; // API key for authentication
+  apiKey: string;
 }
 
 export class ApiServer {
   private app: express.Application;
   private port: number;
   private apiKey: string;
-  private bot: any; // KingMycoBot instance
-  private supabase: any; // SupabaseIntegration instance
+  private bot: any;
+  private supabase: any;
 
   constructor(config: ApiServerConfig, bot: any, supabase: any) {
     this.app = express();
@@ -27,9 +27,8 @@ export class ApiServer {
     this.app.use(express.json());
 
     // API key authentication middleware
-    this.app.use((req: Request, res: Response, next) => {
-      // Skip auth for health check
-      if (req.path === '/health') {
+    this.app.use((req: Request, res: Response, next: any) => {
+      if (req.path === '/health' || req.path === '/api/leaderboard' || req.path === '/api/stats') {
         return next();
       }
 
@@ -42,10 +41,10 @@ export class ApiServer {
     });
 
     // CORS
-    this.app.use((req: Request, res: Response, next) => {
+    this.app.use((req: Request, res: Response, next: any) => {
       res.header('Access-Control-Allow-Origin', '*');
       res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-      res.header('Access-Control-Allow-Headers', 'Content-Type, x-api-key');
+      res.header('Access-Control-Allow-Headers', 'Content-Type, x-api-key, Authorization');
       next();
     });
   }
@@ -56,81 +55,131 @@ export class ApiServer {
       res.json({ status: 'ok', timestamp: new Date().toISOString() });
     });
 
-    // GET /api/leaderboard - Get top spore earners
-    this.app.get('/api/leaderboard', async (req: Request, res: Response) => {
+    // ============= WALLET AUTHENTICATION =============
+
+    // GET /api/wallet/:address/nonce - Generate nonce for wallet signature
+    this.app.get('/api/wallet/:address/nonce', async (req: Request, res: Response) => {
       try {
-        const limit = Math.min(parseInt(req.query.limit as string) || 10, 100);
-        const leaderboard = await this.supabase.getLeaderboard(limit);
+        const walletAddress = (Array.isArray(req.params.address) ? req.params.address[0] : req.params.address).toLowerCase();
+
+        const nonce = await this.supabase.generateNonce(walletAddress);
+        if (!nonce) {
+          return res.status(500).json({ success: false, error: 'Failed to generate nonce' });
+        }
+
         res.json({
           success: true,
-          data: leaderboard,
-          timestamp: new Date().toISOString(),
+          walletAddress,
+          nonce,
+          message: 'Sign this nonce with your wallet to verify ownership',
         });
       } catch (error) {
-        console.error('Leaderboard error:', error);
-        res.status(500).json({ success: false, error: 'Failed to fetch leaderboard' });
+        console.error('Nonce generation error:', error);
+        res.status(500).json({ success: false, error: 'Failed to generate nonce' });
       }
     });
 
-    // GET /api/user/:userId/profile - Get user profile with spores
-    this.app.get('/api/user/:userId/profile', async (req: Request, res: Response) => {
+    // POST /api/wallet/verify - Verify wallet signature
+    this.app.post('/api/wallet/verify', async (req: Request, res: Response) => {
       try {
-        const userId = parseInt(Array.isArray(req.params.userId) ? req.params.userId[0] : req.params.userId);
-        const profile = await this.supabase.getUserProfile(userId);
+        const { walletAddress, signature, nonce } = req.body;
+
+        if (!walletAddress || !signature || !nonce) {
+          return res.status(400).json({
+            success: false,
+            error: 'Missing required fields: walletAddress, signature, nonce',
+          });
+        }
+
+        // In production, verify signature on-chain using ethers.js or similar
+        const verified = await this.supabase.verifySignature(walletAddress.toLowerCase(), nonce);
+
+        if (!verified) {
+          return res.status(401).json({ success: false, error: 'Signature verification failed' });
+        }
+
+        res.json({
+          success: true,
+          walletAddress: walletAddress.toLowerCase(),
+          verified: true,
+          token: Buffer.from(`${walletAddress}:${Date.now()}`).toString('base64'),
+        });
+      } catch (error) {
+        console.error('Signature verification error:', error);
+        res.status(500).json({ success: false, error: 'Failed to verify signature' });
+      }
+    });
+
+    // ============= USER PROFILE (WALLET-BASED) =============
+
+    // GET /api/user/:wallet/profile - Get user profile
+    this.app.get('/api/user/:wallet/profile', async (req: Request, res: Response) => {
+      try {
+        const walletAddress = (Array.isArray(req.params.wallet) ? req.params.wallet[0] : req.params.wallet).toLowerCase();
+        const profile = await this.supabase.getOrCreateProfile(walletAddress);
 
         if (!profile) {
           return res.status(404).json({ success: false, error: 'User not found' });
         }
 
-        res.json({
-          success: true,
-          data: profile,
-        });
+        res.json({ success: true, data: profile });
       } catch (error) {
         console.error('User profile error:', error);
         res.status(500).json({ success: false, error: 'Failed to fetch user profile' });
       }
     });
 
-    // GET /api/user/:userId/spores - Get user spores balance
-    this.app.get('/api/user/:userId/spores', async (req: Request, res: Response) => {
+    // GET /api/user/:wallet/spores - Get spore balance
+    this.app.get('/api/user/:wallet/spores', async (req: Request, res: Response) => {
       try {
-        const userId = parseInt(Array.isArray(req.params.userId) ? req.params.userId[0] : req.params.userId);
-        const spores = await this.supabase.getUserSpores(userId);
+        const walletAddress = (Array.isArray(req.params.wallet) ? req.params.wallet[0] : req.params.wallet).toLowerCase();
+        const spores = await this.supabase.getUserSpores(walletAddress);
 
-        res.json({
-          success: true,
-          userId,
-          totalSpores: spores,
-        });
+        res.json({ success: true, walletAddress, totalSpores: spores });
       } catch (error) {
         console.error('User spores error:', error);
         res.status(500).json({ success: false, error: 'Failed to fetch spores' });
       }
     });
 
-    // GET /api/user/:userId/quests - Get user quests
-    this.app.get('/api/user/:userId/quests', async (req: Request, res: Response) => {
+    // GET /api/user/:wallet/rank - Get user rank on leaderboard
+    this.app.get('/api/user/:wallet/rank', async (req: Request, res: Response) => {
       try {
-        const userId = parseInt(Array.isArray(req.params.userId) ? req.params.userId[0] : req.params.userId);
-        const completed = req.query.completed ? req.query.completed === 'true' : undefined;
-        const quests = await this.supabase.getUserQuests(userId, completed);
+        const walletAddress = (Array.isArray(req.params.wallet) ? req.params.wallet[0] : req.params.wallet).toLowerCase();
+        const rankData = await this.supabase.getUserRank(walletAddress);
 
-        res.json({
-          success: true,
-          data: quests,
-        });
+        if (!rankData) {
+          return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        res.json({ success: true, walletAddress, ...rankData });
+      } catch (error) {
+        console.error('User rank error:', error);
+        res.status(500).json({ success: false, error: 'Failed to fetch rank' });
+      }
+    });
+
+    // ============= QUESTS =============
+
+    // GET /api/user/:wallet/quests - List user quests
+    this.app.get('/api/user/:wallet/quests', async (req: Request, res: Response) => {
+      try {
+        const walletAddress = (Array.isArray(req.params.wallet) ? req.params.wallet[0] : req.params.wallet).toLowerCase();
+        const completed = req.query.completed ? req.query.completed === 'true' : undefined;
+        const quests = await this.supabase.getUserQuests(walletAddress, completed);
+
+        res.json({ success: true, data: quests });
       } catch (error) {
         console.error('User quests error:', error);
         res.status(500).json({ success: false, error: 'Failed to fetch quests' });
       }
     });
 
-    // POST /api/user/:userId/quests - Create a new quest
-    this.app.post('/api/user/:userId/quests', async (req: Request, res: Response) => {
+    // POST /api/user/:wallet/quests - Create quest
+    this.app.post('/api/user/:wallet/quests', async (req: Request, res: Response) => {
       try {
-        const userId = parseInt(Array.isArray(req.params.userId) ? req.params.userId[0] : req.params.userId);
-        const { title, description, reward } = req.body;
+        const walletAddress = (Array.isArray(req.params.wallet) ? req.params.wallet[0] : req.params.wallet).toLowerCase();
+        const { title, description, reward, questType = 'general', contractAddress } = req.body;
 
         if (!title || !description || !reward) {
           return res.status(400).json({
@@ -139,7 +188,14 @@ export class ApiServer {
           });
         }
 
-        const questId = await this.supabase.createQuest(userId, title, description, reward);
+        const questId = await this.supabase.createQuest(
+          walletAddress,
+          title,
+          description,
+          reward,
+          questType,
+          contractAddress
+        );
 
         if (!questId) {
           return res.status(500).json({ success: false, error: 'Failed to create quest' });
@@ -156,24 +212,31 @@ export class ApiServer {
       }
     });
 
-    // POST /api/user/:userId/quests/:questId/complete - Complete a quest
-    this.app.post('/api/user/:userId/quests/:questId/complete', async (req: Request, res: Response) => {
+    // POST /api/user/:wallet/quests/:questId/complete - Complete quest
+    this.app.post('/api/user/:wallet/quests/:questId/complete', async (req: Request, res: Response) => {
       try {
-        const userId = parseInt(Array.isArray(req.params.userId) ? req.params.userId[0] : req.params.userId);
+        const walletAddress = (Array.isArray(req.params.wallet) ? req.params.wallet[0] : req.params.wallet).toLowerCase();
         const questId = Array.isArray(req.params.questId) ? req.params.questId[0] : req.params.questId;
+        const { proofData, transactionHash } = req.body;
 
-        const success = await this.supabase.completeQuest(questId, userId);
+        const success = await this.supabase.completeQuest(questId, walletAddress, proofData, transactionHash);
 
         if (!success) {
           return res.status(500).json({ success: false, error: 'Failed to complete quest' });
         }
 
-        // Announce quest completion to Telegram
-        await this.bot.announceQuestCompletion(userId, questId);
+        // Announce in Telegram if Telegram ID is linked
+        if (this.bot && this.bot.announceQuestCompletion) {
+          this.bot.announceQuestCompletion(walletAddress, questId).catch((e: any) => {
+            console.error('Failed to announce quest:', e);
+          });
+        }
 
         res.json({
           success: true,
           message: 'Quest completed successfully! Spores awarded.',
+          walletAddress,
+          questId,
         });
       } catch (error) {
         console.error('Complete quest error:', error);
@@ -181,10 +244,51 @@ export class ApiServer {
       }
     });
 
-    // POST /api/user/:userId/spores/add - Add spores manually (admin)
-    this.app.post('/api/user/:userId/spores/add', async (req: Request, res: Response) => {
+    // ============= LEADERBOARD =============
+
+    // GET /api/leaderboard - Top spore earners
+    this.app.get('/api/leaderboard', async (req: Request, res: Response) => {
       try {
-        const userId = parseInt(Array.isArray(req.params.userId) ? req.params.userId[0] : req.params.userId);
+        const limit = Math.min(parseInt(req.query.limit as string) || 10, 100);
+        const leaderboard = await this.supabase.getLeaderboard(limit);
+
+        res.json({
+          success: true,
+          data: leaderboard,
+          timestamp: new Date().toISOString(),
+        });
+      } catch (error) {
+        console.error('Leaderboard error:', error);
+        res.status(500).json({ success: false, error: 'Failed to fetch leaderboard' });
+      }
+    });
+
+    // ============= STATS =============
+
+    // GET /api/stats - Overall statistics
+    this.app.get('/api/stats', async (req: Request, res: Response) => {
+      try {
+        const stats = await this.supabase.getStats();
+
+        res.json({
+          success: true,
+          stats: {
+            ...stats,
+            timestamp: new Date().toISOString(),
+          },
+        });
+      } catch (error) {
+        console.error('Stats error:', error);
+        res.status(500).json({ success: false, error: 'Failed to fetch stats' });
+      }
+    });
+
+    // ============= SPORES (ADMIN) =============
+
+    // POST /api/user/:wallet/spores/add - Award spores
+    this.app.post('/api/user/:wallet/spores/add', async (req: Request, res: Response) => {
+      try {
+        const walletAddress = (Array.isArray(req.params.wallet) ? req.params.wallet[0] : req.params.wallet).toLowerCase();
         const { amount, reason } = req.body;
 
         if (!amount || amount <= 0) {
@@ -194,41 +298,18 @@ export class ApiServer {
           });
         }
 
-        await this.supabase.addSpores(userId, amount, reason || 'Manual admin reward');
-
-        const newBalance = await this.supabase.getUserSpores(userId);
+        await this.supabase.addSpores(walletAddress, amount, reason || 'Manual admin reward');
+        const newBalance = await this.supabase.getUserSpores(walletAddress);
 
         res.json({
           success: true,
-          userId,
+          walletAddress,
           newBalance,
-          message: `Added ${amount} spores to user ${userId}`,
+          message: `Added ${amount} spores to wallet ${walletAddress}`,
         });
       } catch (error) {
         console.error('Add spores error:', error);
         res.status(500).json({ success: false, error: 'Failed to add spores' });
-      }
-    });
-
-    // GET /api/stats - Get overall bot stats
-    this.app.get('/api/stats', async (req: Request, res: Response) => {
-      try {
-        const leaderboard = await this.supabase.getLeaderboard(100);
-        const totalUsers = leaderboard.length;
-        const totalSpores = leaderboard.reduce((sum: number, user: any) => sum + user.totalSpores, 0);
-
-        res.json({
-          success: true,
-          stats: {
-            totalUsers,
-            totalSpores,
-            topPlayer: leaderboard[0] || null,
-            timestamp: new Date().toISOString(),
-          },
-        });
-      } catch (error) {
-        console.error('Stats error:', error);
-        res.status(500).json({ success: false, error: 'Failed to fetch stats' });
       }
     });
   }

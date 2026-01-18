@@ -712,16 +712,16 @@ export class KingMycoBot {
     this.bot.sendMessage(chatId, leaderboardText, options);
   }
 
-  // Announce quest completion to Telegram
-  public async announceQuestCompletion(userId: number, questId: string): Promise<void> {
+  // Announce quest completion to Telegram (now wallet-based)
+  public async announceQuestCompletion(walletAddress: string, questId: string): Promise<void> {
     try {
       if (!this.supabase) {
         console.warn('Supabase not initialized, cannot announce quest');
         return;
       }
 
-      const profile = await this.supabase.getUserProfile(userId);
-      const userQuests = await this.supabase.getUserQuests(userId, true);
+      const profile = await this.supabase.getUserProfile(walletAddress);
+      const userQuests = await this.supabase.getUserQuests(walletAddress, true);
       const quest = userQuests.find((q: any) => q.id === questId);
 
       if (!quest || !profile) {
@@ -729,40 +729,42 @@ export class KingMycoBot {
         return;
       }
 
+      const shortAddress = `${walletAddress.substring(0, 6)}...${walletAddress.substring(-4)}`;
       const announcement = `
 🎉 **QUEST COMPLETED!**
 
-👤 ${profile.telegramName || `User ${userId}`} has completed the quest:
+👤 ${profile.telegramName || shortAddress} has completed the quest:
 📜 **${quest.title}**
 
 ✨ **Reward:** +${quest.reward} 🌱 Spores
 
 Total Spores Earned: ${profile.totalSpores}
 Quests Completed: ${profile.questsCompleted}
+Wallet: \`${walletAddress}\`
 
 ---
-*Complete quests at kingmyco.com to earn more spores!*
+*Complete quests on kingmyco.com to earn more spores!*
       `;
 
-      // Announce to your admin channel or public group (if available)
+      // Announce to admin channel or user's private chat
       const announcementGroupId = process.env.ANNOUNCEMENT_GROUP_ID;
       if (announcementGroupId) {
         this.bot.sendMessage(announcementGroupId, announcement);
-      } else {
-        // Fallback: send to user's private chat
-        this.bot.sendMessage(userId, announcement);
+      } else if (profile.telegramUserId) {
+        // If Telegram ID linked, send to user's DM
+        this.bot.sendMessage(profile.telegramUserId, announcement);
       }
     } catch (error) {
       console.error('Error announcing quest completion:', error);
     }
   }
 
-  // Get user spores
-  public async getUserSpores(userId: number): Promise<number> {
+  // Get user spores by wallet
+  public async getUserSpores(walletAddress: string): Promise<number> {
     if (!this.supabase) {
       return 0;
     }
-    return await this.supabase.getUserSpores(userId);
+    return await this.supabase.getUserSpores(walletAddress);
   }
 
   public start(): void {
