@@ -1,3 +1,6 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import { KingMycoBot } from './bot_clean';
 import { SupabaseIntegration } from './services/supabase-integration';
 import { ApiServer } from './services/api-server';
