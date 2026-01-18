@@ -123,7 +123,7 @@ export class KingMycoBot {
           [{ text: '🧙 Ask King Myco', callback_data: 'menu_kingmyco' }],
           [{ text: '💼 Portfolio', callback_data: 'menu_portfolio' }],
           [{ text: '🔘 Button Push', callback_data: 'menu_buttonpush' }],
-          [{ text: '🏆 Leaderboard', callback_data: 'menu_leaderboard' }],
+          [{ text: '⭐ Spore Leaderboard', callback_data: 'menu_spore_leaderboard' }, { text: '🏆 Push Leaderboard', callback_data: 'menu_leaderboard' }],
         ],
       },
     } as TelegramBot.SendMessageOptions;
@@ -157,6 +157,9 @@ export class KingMycoBot {
         break;
       case 'menu_leaderboard':
         this.handleLeaderboard({ chat: { id: chatId } } as TelegramBot.Message);
+        break;
+      case 'menu_spore_leaderboard':
+        this.handleSporeLeaderboard({ chat: { id: chatId } } as TelegramBot.Message);
         break;
       case 'button_push':
         console.log(`[BUTTON_PUSH] Attempting to handle button click for user ${query.from?.id}`);
@@ -710,6 +713,51 @@ export class KingMycoBot {
       },
     } as TelegramBot.SendMessageOptions;
     this.bot.sendMessage(chatId, leaderboardText, options);
+  }
+
+  private async handleSporeLeaderboard(msg: TelegramBot.Message): Promise<void> {
+    const chatId = msg.chat.id;
+    try {
+      if (!this.supabase) {
+        this.bot.sendMessage(chatId, '❌ Spore leaderboard is not available. Supabase is not initialized.');
+        return;
+      }
+
+      const leaderboard = await this.supabase.getLeaderboard(10);
+      
+      if (!leaderboard || leaderboard.length === 0) {
+        this.bot.sendMessage(chatId, '📊 **Spore Leaderboard**\n\nNo users have earned spores yet. Be the first! 🚀');
+        return;
+      }
+
+      let leaderboardText = '⭐ **SPORE LEADERBOARD** ⭐\n\n';
+      leaderboardText += '🏆 Top 10 Spore Earners:\n\n';
+      
+      leaderboard.forEach((entry: any, index: number) => {
+        const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`;
+        const walletDisplay = entry.walletAddress 
+          ? `${entry.walletAddress.substring(0, 6)}...${entry.walletAddress.substring(entry.walletAddress.length - 4)}`
+          : 'Unknown';
+        leaderboardText += `${medal} ${walletDisplay}\n`;
+        leaderboardText += `   💰 ${entry.totalSpores} spores\n\n`;
+      });
+
+      leaderboardText += '---\n💡 Complete quests to earn spores!';
+
+      const options = {
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: '🏆 Push Leaderboard', callback_data: 'menu_leaderboard' }],
+            [{ text: '⬅️ Back', callback_data: 'back_main' }],
+          ],
+        },
+      } as TelegramBot.SendMessageOptions;
+
+      this.bot.sendMessage(chatId, leaderboardText, options);
+    } catch (error) {
+      console.error('Spore leaderboard error:', error);
+      this.bot.sendMessage(chatId, '❌ Error loading spore leaderboard. Try again later.');
+    }
   }
 
   // Announce quest completion to Telegram (now wallet-based)

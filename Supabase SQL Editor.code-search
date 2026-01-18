@@ -1,0 +1,66 @@
+# Query:  Supabase SQL Editor
+# ContextLines: 1
+
+13 results - 10 files
+
+COMPLETION_REPORT.md:
+  259  ```bash
+  260: # Open Supabase SQL Editor
+  261  # Copy all content from: supabase-setup.sql
+
+DEPLOYMENT_CHECKLIST.md:
+  165  ```sql
+  166: -- In Supabase SQL Editor
+  167  -- Verify your tables exist:
+
+DOCUMENTATION_INDEX.md:
+  55  ```bash
+  56: # In Supabase SQL Editor:
+  57  # Copy entire content of supabase-setup.sql
+
+GO_LIVE_NOW.md:
+   12  
+   13: **1a. Open Supabase SQL Editor**
+   14  - Go to: https://app.supabase.com
+
+   21  Copy ENTIRE content from: supabase-setup.sql
+   22: Paste into Supabase SQL Editor
+   23  Click "Run"
+
+  255  ```
+  256: → Open Supabase SQL Editor
+  257  → Run: SELECT * FROM user_profiles;
+
+INTEGRATION_SUMMARY.md:
+  51  - `src/services/supabase-integration.ts` - Supabase database integration
+  52: - `supabase-setup.sql` - Database schema (run in Supabase SQL editor)
+  53  - `WEBSITE_INTEGRATION.md` - Full API documentation
+
+  76  ```sql
+  77: -- Run in Supabase SQL Editor (from supabase-setup.sql)
+  78  CREATE TABLE user_profiles (...)
+
+PROJECT_COMPLETION.md:
+  324  ```
+  325: → Open: Supabase SQL Editor
+  326  → Copy: All content from supabase-setup.sql
+
+QUICK_REFERENCE.md:
+  108  ```
+  109: → Open: Supabase SQL Editor
+  110  → Copy: All content from supabase-setup.sql
+
+REFACTORING_SUMMARY.md:
+  347  # Copy all SQL from supabase-setup.sql
+  348: # Paste into Supabase SQL Editor
+  349  # Click "Run"
+
+SETUP_GUIDE.md:
+  6  2. Create a new project or use existing
+  7: 3. Run the SQL from `supabase-setup.sql` in Supabase SQL Editor
+  8  4. Copy credentials:
+
+WEB3_LAUNCH_SUMMARY.md:
+  333  ```bash
+  334: # Copy supabase-setup.sql into Supabase SQL Editor
+  335  # Click Run
