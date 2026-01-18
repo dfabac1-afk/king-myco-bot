@@ -3,13 +3,20 @@ export interface ButtonPusher {
   name: string;
   clicks: number;
   lastClickTime: number;
+  sporesEarned?: number; // Total spores earned from button pushes
 }
 
 export class ButtonContestService {
   private pushers: Map<number, ButtonPusher> = new Map();
   private readonly COOLDOWN_MS = 30 * 60 * 1000; // 30 minutes
+  private readonly SPORES_PER_PUSH = 10; // Spores earned per button push
+  private supabase: any; // SupabaseIntegration instance
 
-  addClick(userId: number, userName: string): { success: boolean; message: string; cooldownMinutes?: number } {
+  constructor(supabase?: any) {
+    this.supabase = supabase;
+  }
+
+  addClick(userId: number, userName: string): { success: boolean; message: string; cooldownMinutes?: number; sporesAwarded?: number } {
     const now = Date.now();
     const pusher = this.pushers.get(userId);
 
@@ -31,13 +38,22 @@ export class ButtonContestService {
       name: userName || `User ${userId}`,
       clicks: (pusher?.clicks || 0) + 1,
       lastClickTime: now,
+      sporesEarned: (pusher?.sporesEarned || 0) + this.SPORES_PER_PUSH,
     };
 
     this.pushers.set(userId, newPusher);
 
+    // Award spores via Supabase if available
+    if (this.supabase) {
+      this.supabase.addSpores(userId, this.SPORES_PER_PUSH, 'Button push contest').catch((e: any) => {
+        console.error('Failed to award spores:', e);
+      });
+    }
+
     return {
       success: true,
       message: `🎉 Button pushed! You now have ${newPusher.clicks} total pushes!`,
+      sporesAwarded: this.SPORES_PER_PUSH,
     };
   }
 

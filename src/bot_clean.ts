@@ -3,15 +3,17 @@ import { DexScreenerService } from './services/dexscreener';
 import { OpenAIService } from './services/openai';
 import { ChatMessage } from './types';
 import { ButtonContestService } from './services/buttoncontest';
+import { SupabaseIntegration } from './services/supabase-integration';
 
 export class KingMycoBot {
   private bot: TelegramBot;
   private dexScreener: DexScreenerService;
   private openai: OpenAIService;
   private conversationHistory: Map<number, ChatMessage[]> = new Map();
-  private buttonContest: ButtonContestService = new ButtonContestService();
+  private buttonContest: ButtonContestService;
+  private supabase: SupabaseIntegration | null;
 
-  constructor(botToken: string, openaiKey: string) {
+  constructor(botToken: string, openaiKey: string, supabase?: SupabaseIntegration | null) {
     const token = process.env.BOT_TOKEN || botToken;
     if (!token) {
       throw new Error('BOT_TOKEN must be provided via environment variable or constructor');
@@ -19,6 +21,8 @@ export class KingMycoBot {
     this.bot = new TelegramBot(token, { polling: true });
     this.dexScreener = new DexScreenerService();
     this.openai = new OpenAIService(openaiKey);
+    this.supabase = supabase || null;
+    this.buttonContest = new ButtonContestService(supabase);
 
     this.setupHandlers();
     this.setupMenuButton();
@@ -706,6 +710,59 @@ export class KingMycoBot {
       },
     } as TelegramBot.SendMessageOptions;
     this.bot.sendMessage(chatId, leaderboardText, options);
+  }
+
+  // Announce quest completion to Telegram
+  public async announceQuestCompletion(userId: number, questId: string): Promise<void> {
+    try {
+      if (!this.supabase) {
+        console.warn('Supabase not initialized, cannot announce quest');
+        return;
+      }
+
+      const profile = await this.supabase.getUserProfile(userId);
+      const userQuests = await this.supabase.getUserQuests(userId, true);
+      const quest = userQuests.find((q: any) => q.id === questId);
+
+      if (!quest || !profile) {
+        console.error('Quest or profile not found');
+        return;
+      }
+
+      const announcement = `
+🎉 **QUEST COMPLETED!**
+
+👤 ${profile.telegramName || `User ${userId}`} has completed the quest:
+📜 **${quest.title}**
+
+✨ **Reward:** +${quest.reward} 🌱 Spores
+
+Total Spores Earned: ${profile.totalSpores}
+Quests Completed: ${profile.questsCompleted}
+
+---
+*Complete quests at kingmyco.com to earn more spores!*
+      `;
+
+      // Announce to your admin channel or public group (if available)
+      const announcementGroupId = process.env.ANNOUNCEMENT_GROUP_ID;
+      if (announcementGroupId) {
+        this.bot.sendMessage(announcementGroupId, announcement);
+      } else {
+        // Fallback: send to user's private chat
+        this.bot.sendMessage(userId, announcement);
+      }
+    } catch (error) {
+      console.error('Error announcing quest completion:', error);
+    }
+  }
+
+  // Get user spores
+  public async getUserSpores(userId: number): Promise<number> {
+    if (!this.supabase) {
+      return 0;
+    }
+    return await this.supabase.getUserSpores(userId);
   }
 
   public start(): void {
