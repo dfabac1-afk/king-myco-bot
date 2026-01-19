@@ -214,57 +214,6 @@ export class SupabaseIntegration {
     }
   }
 
-  // Track button push for Telegram user (create profile if needed)
-  async trackButtonPush(telegramUserId: number, telegramName: string, sporesAwarded: number): Promise<void> {
-    try {
-      // Try to find existing profile by Telegram ID
-      const { data: existingProfile, error: findError } = await this.supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('telegramUserId', telegramUserId)
-        .maybeSingle();
-
-      if (findError && findError.code !== 'PGRST116') {
-        throw findError;
-      }
-
-      if (existingProfile) {
-        // Update existing profile
-        const { error: updateError } = await this.supabase
-          .from('user_profiles')
-          .update({
-            buttonPushes: (existingProfile.buttonPushes || 0) + 1,
-            totalSpores: (existingProfile.totalSpores || 0) + sporesAwarded,
-            telegramName: telegramName, // Update name in case it changed
-            lastActiveAt: new Date().toISOString(),
-          })
-          .eq('telegramUserId', telegramUserId);
-
-        if (updateError) throw updateError;
-        console.log(`[SUPABASE] Button push tracked for ${telegramName} (${telegramUserId})`);
-      } else {
-        // Create new profile for Telegram-only user
-        const { error: insertError } = await this.supabase
-          .from('user_profiles')
-          .insert([{
-            walletAddress: `telegram_${telegramUserId}`, // Placeholder wallet
-            telegramUserId,
-            telegramName,
-            totalSpores: sporesAwarded,
-            buttonPushes: 1,
-            questsCompleted: 0,
-            isVerified: false,
-            chainId: 501,
-          }]);
-
-        if (insertError) throw insertError;
-        console.log(`[SUPABASE] New profile created for ${telegramName} (${telegramUserId})`);
-      }
-    } catch (e) {
-      console.error('[SUPABASE] Error tracking button push:', e);
-    }
-  }
-
   // ============= QUEST MANAGEMENT =============
 
   // Create quest
@@ -472,6 +421,169 @@ export class SupabaseIntegration {
         topPlayer: null,
         totalQuestsCompleted: 0,
       };
+    }
+  }
+
+  // ============= DAILY BUTTON WINNERS =============
+
+  // Save daily winner to database
+  async saveDailyWinner(winner: DailyButtonWinner): Promise<boolean> {
+    try {
+      const { error } = await this.supabase
+        .from('daily_button_winners')
+        .insert([{
+          userId: winner.userId,
+          userName: winner.userName,
+          dailyPushes: winner.dailyPushes,
+          totalPushes: winner.totalPushes,
+          rank: winner.rank,
+          winDate: winner.winDate,
+        }]);
+
+      if (error) {
+        // Error code 23505 is unique constraint violation - winner already saved for this date
+        if (error.code === '23505') {
+          console.log('[SUPABASE] Winner already saved for date:', winner.winDate);
+          return true;
+        }
+        throw error;
+      }
+      
+      console.log('[SUPABASE] Daily winner saved:', winner.userName, winner.winDate);
+      return true;
+    } catch (e) {
+      console.error('Supabase saveDailyWinner error:', e);
+      return false;
+    }
+  }
+
+  // Get daily winners history
+  async getDailyWinnersHistory(limit: number = 30): Promise<DailyButtonWinner[]> {
+    try {
+      const { data, error } = await this.supabase
+        .from('daily_button_winners')
+        .select('*')
+        .order('winDate', { ascending: false })
+        .limit(limit);
+
+      if (error) throw error;
+      return data || [];
+    } catch (e) {
+      console.error('Supabase getDailyWinnersHistory error:', e);
+      return [];
+    }
+  }
+
+  // Get daily wins leaderboard (champions by total days won)
+  async getDailyWinsLeaderboard(limit: number = 10): Promise<any[]> {
+    try {
+      // Try using the SQL function first
+      const { data, error } = await this.supabase
+        .rpc('get_daily_wins_leaderboard', { row_limit: limit });
+
+      if (error) {
+        console.error('RPC error, using manual aggregation:', error);
+        // Fallback: manual aggregation
+        const { data: allWinners, error: winnersError } = await this.supabase
+          .from('daily_button_winners')
+          .select('*')
+          .order('winDate', { ascending: false });
+
+        if (winnersError) throw winnersError;
+
+        // Manually aggregate wins per user
+        const userWins = new Map<number, { userName: string; wins: number; lastWinDate: string }>();
+        
+        for (const winner of allWinners || []) {
+          const existing = userWins.get(winner.userId);
+          if (existing) {
+            existing.wins++;
+            if (winner.winDate > existing.lastWinDate) {
+              existing.lastWinDate = winner.winDate;
+            }
+          } else {
+            userWins.set(winner.userId, {
+              userName: winner.userName,
+              wins: 1,
+              lastWinDate: winner.winDate,
+            });
+          }
+        }
+
+        // Convert to array and sort
+        const leaderboard = Array.from(userWins.entries())
+          .map(([userId, stats]) => ({ userId, ...stats }))
+          .sort((a, b) => b.wins - a.wins || new Date(b.lastWinDate).getTime() - new Date(a.lastWinDate).getTime())
+          .slice(0, limit);
+
+        return leaderboard;
+      }
+
+      return data || [];
+    } catch (e) {
+      console.error('Supabase getDailyWinsLeaderboard error:', e);
+      return [];
+    }
+  }
+
+  // Check if winner already exists for a date
+  async hasWinnerForDate(date: string): Promise<boolean> {
+    try {
+      const { data, error } = await this.supabase
+        .from('daily_button_winners')
+        .select('id')
+        .eq('winDate', date)
+        .single();
+
+      return !!data && !error;
+    } catch {
+      return false;
+    }
+  }
+
+  // Track button push for Telegram-only users (creates profile if needed)
+  async trackButtonPush(userId: number, userName: string, sporesEarned: number): Promise<boolean> {
+    try {
+      // Create a pseudo wallet address for Telegram-only users
+      const pseudoWallet = `telegram_${userId}`;
+
+      // Get or create profile
+      let profile = await this.getUserProfile(pseudoWallet);
+      
+      if (!profile) {
+        const { data, error } = await this.supabase
+          .from('user_profiles')
+          .insert([{
+            walletAddress: pseudoWallet,
+            telegramUserId: userId,
+            telegramName: userName,
+            totalSpores: sporesEarned,
+            buttonPushes: 1,
+            questsCompleted: 0,
+            isVerified: false,
+          }])
+          .select()
+          .single();
+
+        if (error) throw error;
+        return true;
+      }
+
+      // Update existing profile
+      const { error } = await this.supabase
+        .from('user_profiles')
+        .update({
+          totalSpores: profile.totalSpores + sporesEarned,
+          buttonPushes: (profile as any).buttonPushes ? (profile as any).buttonPushes + 1 : 1,
+          telegramName: userName, // Update name in case it changed
+        })
+        .eq('walletAddress', pseudoWallet);
+
+      if (error) throw error;
+      return true;
+    } catch (e) {
+      console.error('Supabase trackButtonPush error:', e);
+      return false;
     }
   }
 }
