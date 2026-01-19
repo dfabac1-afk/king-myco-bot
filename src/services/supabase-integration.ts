@@ -38,13 +38,13 @@ export interface ParticipationProof {
 
 export interface DailyButtonWinner {
   id?: string;
-  userId: number;
-  userName: string;
-  dailyPushes: number;
-  totalPushes: number;
+  user_id: number;
+  user_name: string;
+  daily_pushes: number;
+  total_pushes: number;
   rank: number;
-  winDate: string; // YYYY-MM-DD
-  createdAt?: Date;
+  win_date: string; // YYYY-MM-DD
+  created_at?: Date;
 }
 
 export class SupabaseIntegration {
@@ -432,24 +432,24 @@ export class SupabaseIntegration {
       const { error } = await this.supabase
         .from('daily_button_winners')
         .insert([{
-          userId: winner.userId,
-          userName: winner.userName,
-          dailyPushes: winner.dailyPushes,
-          totalPushes: winner.totalPushes,
+          user_id: winner.user_id,
+          user_name: winner.user_name,
+          daily_pushes: winner.daily_pushes,
+          total_pushes: winner.total_pushes,
           rank: winner.rank,
-          winDate: winner.winDate,
+          win_date: winner.win_date,
         }]);
 
       if (error) {
         // Error code 23505 is unique constraint violation - winner already saved for this date
         if (error.code === '23505') {
-          console.log('[SUPABASE] Winner already saved for date:', winner.winDate);
+          console.log('[SUPABASE] Winner already saved for date:', winner.win_date);
           return true;
         }
         throw error;
       }
       
-      console.log('[SUPABASE] Daily winner saved:', winner.userName, winner.winDate);
+      console.log('[SUPABASE] Daily winner saved:', winner.user_name, winner.win_date);
       return true;
     } catch (e) {
       console.error('Supabase saveDailyWinner error:', e);
@@ -463,7 +463,7 @@ export class SupabaseIntegration {
       const { data, error } = await this.supabase
         .from('daily_button_winners')
         .select('*')
-        .order('winDate', { ascending: false })
+        .order('win_date', { ascending: false })
         .limit(limit);
 
       if (error) throw error;
@@ -487,33 +487,33 @@ export class SupabaseIntegration {
         const { data: allWinners, error: winnersError } = await this.supabase
           .from('daily_button_winners')
           .select('*')
-          .order('winDate', { ascending: false });
+          .order('win_date', { ascending: false });
 
         if (winnersError) throw winnersError;
 
         // Manually aggregate wins per user
-        const userWins = new Map<number, { userName: string; wins: number; lastWinDate: string }>();
+        const userWins = new Map<number, { user_name: string; wins: number; last_win_date: string }>();
         
         for (const winner of allWinners || []) {
-          const existing = userWins.get(winner.userId);
+          const existing = userWins.get(winner.user_id);
           if (existing) {
             existing.wins++;
-            if (winner.winDate > existing.lastWinDate) {
-              existing.lastWinDate = winner.winDate;
+            if (winner.win_date > existing.last_win_date) {
+              existing.last_win_date = winner.win_date;
             }
           } else {
-            userWins.set(winner.userId, {
-              userName: winner.userName,
+            userWins.set(winner.user_id, {
+              user_name: winner.user_name,
               wins: 1,
-              lastWinDate: winner.winDate,
+              last_win_date: winner.win_date,
             });
           }
         }
 
         // Convert to array and sort
         const leaderboard = Array.from(userWins.entries())
-          .map(([userId, stats]) => ({ userId, ...stats }))
-          .sort((a, b) => b.wins - a.wins || new Date(b.lastWinDate).getTime() - new Date(a.lastWinDate).getTime())
+          .map(([user_id, stats]) => ({ user_id, ...stats }))
+          .sort((a, b) => b.wins - a.wins || new Date(b.last_win_date).getTime() - new Date(a.last_win_date).getTime())
           .slice(0, limit);
 
         return leaderboard;
@@ -532,7 +532,7 @@ export class SupabaseIntegration {
       const { data, error } = await this.supabase
         .from('daily_button_winners')
         .select('id')
-        .eq('winDate', date)
+        .eq('win_date', date)
         .single();
 
       return !!data && !error;

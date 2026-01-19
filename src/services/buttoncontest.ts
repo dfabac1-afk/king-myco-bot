@@ -42,11 +42,11 @@ export class ButtonContestService {
       const winners = await this.supabase.getDailyWinnersHistory(365); // Get last year
       
       this.dailyWinnersHistory = winners.map((w: any) => ({
-        userId: w.userId,
-        name: w.userName,
-        dailyPushes: w.dailyPushes,
-        totalPushes: w.totalPushes,
-        date: w.winDate,
+        userId: w.user_id,
+        name: w.user_name,
+        dailyPushes: w.daily_pushes,
+        totalPushes: w.total_pushes,
+        date: w.win_date,
         rank: w.rank,
       }));
       
@@ -196,12 +196,12 @@ export class ButtonContestService {
     // Save to Supabase if available
     if (this.supabase) {
       this.supabase.saveDailyWinner({
-        userId: dailyWinner.userId,
-        userName: dailyWinner.name,
-        dailyPushes: dailyWinner.dailyPushes,
-        totalPushes: dailyWinner.totalPushes,
+        user_id: dailyWinner.userId,
+        user_name: dailyWinner.name,
+        daily_pushes: dailyWinner.dailyPushes,
+        total_pushes: dailyWinner.totalPushes,
         rank: dailyWinner.rank,
-        winDate: dailyWinner.date,
+        win_date: dailyWinner.date,
       }).catch((e: any) => {
         console.error('[BUTTON_CONTEST] Error saving to Supabase:', e);
       });
@@ -215,11 +215,11 @@ export class ButtonContestService {
       try {
         const winners = await this.supabase.getDailyWinnersHistory(limit);
         return winners.map((w: any) => ({
-          userId: w.userId,
-          name: w.userName,
-          dailyPushes: w.dailyPushes,
-          totalPushes: w.totalPushes,
-          date: w.winDate,
+          userId: w.user_id,
+          name: w.user_name,
+          dailyPushes: w.daily_pushes,
+          totalPushes: w.total_pushes,
+          date: w.win_date,
           rank: w.rank,
         }));
       } catch (e) {

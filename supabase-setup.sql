@@ -100,18 +100,18 @@ CREATE INDEX idx_wallet_connections_address ON wallet_connections(walletAddress)
 -- Daily Button Push Winners table
 CREATE TABLE IF NOT EXISTS daily_button_winners (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  userId BIGINT NOT NULL,
-  userName TEXT NOT NULL,
-  dailyPushes INT NOT NULL,
-  totalPushes INT NOT NULL,
+  user_id BIGINT NOT NULL,
+  user_name TEXT NOT NULL,
+  daily_pushes INT NOT NULL,
+  total_pushes INT NOT NULL,
   rank INT NOT NULL,
-  winDate DATE NOT NULL,
-  createdAt TIMESTAMP DEFAULT NOW(),
-  UNIQUE(winDate) -- Only one winner per day
+  win_date DATE NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW(),
+  UNIQUE(win_date) -- Only one winner per day
 );
 
-CREATE INDEX idx_daily_winners_date ON daily_button_winners(winDate DESC);
-CREATE INDEX idx_daily_winners_user ON daily_button_winners(userId);
+CREATE INDEX idx_daily_winners_date ON daily_button_winners(win_date DESC);
+CREATE INDEX idx_daily_winners_user ON daily_button_winners(user_id);
 
 -- RLS Policies (if using Row Level Security)
 ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
@@ -150,21 +150,21 @@ GRANT SELECT ON quests TO anon;
 -- Function to get daily wins leaderboard (aggregates wins per user)
 CREATE OR REPLACE FUNCTION get_daily_wins_leaderboard(row_limit INT DEFAULT 10)
 RETURNS TABLE (
-  userId BIGINT,
-  userName TEXT,
+  user_id BIGINT,
+  user_name TEXT,
   wins BIGINT,
-  lastWinDate DATE
+  last_win_date DATE
 ) AS $$
 BEGIN
   RETURN QUERY
   SELECT 
-    dbw.userId,
-    MAX(dbw.userName) as userName,
+    dbw.user_id,
+    MAX(dbw.user_name) as user_name,
     COUNT(*)::BIGINT as wins,
-    MAX(dbw.winDate)::DATE as lastWinDate
+    MAX(dbw.win_date)::DATE as last_win_date
   FROM daily_button_winners dbw
-  GROUP BY dbw.userId
-  ORDER BY wins DESC, lastWinDate DESC
+  GROUP BY dbw.user_id
+  ORDER BY wins DESC, last_win_date DESC
   LIMIT row_limit;
 END;
 $$ LANGUAGE plpgsql;
