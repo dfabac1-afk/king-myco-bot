@@ -66,4 +66,4 @@ This is a TypeScript Telegram bot for crypto and Solana, powered by OpenAI GPT-4
 4. Follow persona and error handling conventions.
 
 ---
-For more, see [README.md](../../README.md) and service files in `src/services/`.
+For more, see [README.md](../README.md) and service files in `src/services/`.

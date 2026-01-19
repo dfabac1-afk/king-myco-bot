@@ -1,8 +1,12 @@
-# King Myco AI Telegram Bot
+# MYCOAI
 
-A TypeScript-based Telegram bot powered by OpenAI GPT-4, bringing stoic wisdom and crypto insights to your community. King Myco is a wise mushroom sorcerer who educates, analyzes, and entertains with dry wit and nature-inspired metaphors.
+## King Myco AI - Complete Telegram Bot Platform
 
-## Features
+The official MYCOAI Telegram bot - a TypeScript-based platform powered by OpenAI GPT-4, featuring gamification, Web3 integration, and persistent data storage. King Myco is a wise mushroom sorcerer who educates, analyzes, and entertains with dry wit and nature-inspired metaphors.
+
+## 🌟 Features
+
+### Core Features
 - 🧙 **King Myco Persona** - Stoic mushroom sorcerer with wise, measured responses
 - 🤖 **AI-Powered** - OpenAI GPT-4 integration for intelligent conversations
 - 📊 **Crypto Analysis** - Live Solana token data via DexScreener API
@@ -11,6 +15,19 @@ A TypeScript-based Telegram bot powered by OpenAI GPT-4, bringing stoic wisdom a
 - 𝕏 **X Post Generator** - Unique social media content about $MYCO
 - 💡 **Motivation** - Daily wisdom and diamond hands encouragement
 - 🔍 **Token Lookup** - CA analysis, risk assessment, trending coins
+
+### Gamification & Rewards (NEW!)
+- 🔘 **Button Push Contest** - Push every 30 minutes to compete
+- 🏆 **Live Leaderboards** - Overall & Daily Winners tracking
+- ⭐ **Spore System** - Earn spores for activity (10 per push)
+- 📅 **Daily Winners** - Automatic announcements at midnight UTC
+- 💾 **Supabase Integration** - Persistent data & real-time sync
+- 🎯 **Quest System** - Coming soon!
+
+### Smart Response System
+- 🎯 **Selective Replies** - Only responds to MYCO mentions or questions
+- 📢 **Public Announcements** - Celebrates button pushes & encourages competition
+- 📊 **Analytics** - Track user engagement & activity
 
 ## Quick Start (Local Development)
 
@@ -57,12 +74,31 @@ See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed instructions on deploying to:
 
 ## Environment Variables
 
-For production deployment, set these in your hosting platform:
-
+### Required (Core Functionality)
 ```bash
 BOT_TOKEN=your_telegram_bot_token
 OPENAI_KEY=your_openai_api_key
 ```
+
+### Optional (Enhanced Features)
+```bash
+# Supabase Integration (for spores, leaderboards, daily winners)
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_KEY=your_supabase_anon_key
+
+# API Server (for web3 integration)
+API_KEY=your_api_key
+API_PORT=3000
+
+# Daily Winner Announcements (optional)
+ANNOUNCEMENT_CHAT_ID=-1001234567890
+```
+
+> **🚀 Supabase Setup:** To enable spores, leaderboards, and daily winners tracking:
+> 1. Create a free Supabase account at [supabase.com](https://supabase.com)
+> 2. Run [supabase-setup.sql](supabase-setup.sql) in your SQL Editor
+> 3. Add `SUPABASE_URL` and `SUPABASE_KEY` to your environment
+> 4. See [SUPABASE_DAILY_WINNERS_SETUP.md](SUPABASE_DAILY_WINNERS_SETUP.md) for details
 
 ## Bot Commands
 
@@ -70,6 +106,12 @@ OPENAI_KEY=your_openai_api_key
 - `/start` - Welcome message with interactive menu
 - `/help` - Command reference
 - `/menu` - Main interactive menu
+
+### Gamification Commands (NEW!)
+- `/buttonpush` - Join the button push contest (earn 10 spores)
+- `/leaderboard` - View top button pushers
+- `/dailywinners` - View daily winner history & champions
+- `/sporeleaderboard` - View top spore earners
 
 ### King Myco Commands
 - `/mycoai` - King Myco coin information
@@ -79,6 +121,7 @@ OPENAI_KEY=your_openai_api_key
 
 ### Education Commands
 - `/newtocrypto` - Interactive learning menu (12 topics)
+- `/newtomyco` - Learn with Myco (curated lessons)
 - `/educate <topic>` - Learn about Solana/crypto topics
 - `/mycomeme` - Generate funny crypto memes (6 types)
 

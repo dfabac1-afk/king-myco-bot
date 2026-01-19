@@ -1,7 +1,7 @@
 {
-  "name": "king-myco-bot",
+  "name": "mycoai",
   "version": "1.0.0",
-  "description": "King Myco AI Telegram Bot",
+  "description": "MYCOAI - King Myco AI Telegram Bot with Gamification & Web3 Integration",
   "main": "dist/index.js",
   "scripts": {
     "start": "node dist/index.js",

@@ -36,6 +36,17 @@ export interface ParticipationProof {
   verified: boolean;
 }
 
+export interface DailyButtonWinner {
+  id?: string;
+  userId: number;
+  userName: string;
+  dailyPushes: number;
+  totalPushes: number;
+  rank: number;
+  winDate: string; // YYYY-MM-DD
+  createdAt?: Date;
+}
+
 export class SupabaseIntegration {
   private supabase: any;
   private supabaseUrl: string;
@@ -200,6 +211,57 @@ export class SupabaseIntegration {
     } catch (e) {
       console.error('Supabase getUserSpores error:', e);
       return 0;
+    }
+  }
+
+  // Track button push for Telegram user (create profile if needed)
+  async trackButtonPush(telegramUserId: number, telegramName: string, sporesAwarded: number): Promise<void> {
+    try {
+      // Try to find existing profile by Telegram ID
+      const { data: existingProfile, error: findError } = await this.supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('telegramUserId', telegramUserId)
+        .maybeSingle();
+
+      if (findError && findError.code !== 'PGRST116') {
+        throw findError;
+      }
+
+      if (existingProfile) {
+        // Update existing profile
+        const { error: updateError } = await this.supabase
+          .from('user_profiles')
+          .update({
+            buttonPushes: (existingProfile.buttonPushes || 0) + 1,
+            totalSpores: (existingProfile.totalSpores || 0) + sporesAwarded,
+            telegramName: telegramName, // Update name in case it changed
+            lastActiveAt: new Date().toISOString(),
+          })
+          .eq('telegramUserId', telegramUserId);
+
+        if (updateError) throw updateError;
+        console.log(`[SUPABASE] Button push tracked for ${telegramName} (${telegramUserId})`);
+      } else {
+        // Create new profile for Telegram-only user
+        const { error: insertError } = await this.supabase
+          .from('user_profiles')
+          .insert([{
+            walletAddress: `telegram_${telegramUserId}`, // Placeholder wallet
+            telegramUserId,
+            telegramName,
+            totalSpores: sporesAwarded,
+            buttonPushes: 1,
+            questsCompleted: 0,
+            isVerified: false,
+            chainId: 501,
+          }]);
+
+        if (insertError) throw insertError;
+        console.log(`[SUPABASE] New profile created for ${telegramName} (${telegramUserId})`);
+      }
+    } catch (e) {
+      console.error('[SUPABASE] Error tracking button push:', e);
     }
   }
 

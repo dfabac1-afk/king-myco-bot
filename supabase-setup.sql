@@ -17,6 +17,15 @@ CREATE TABLE IF NOT EXISTS user_profiles (
   updatedAt TIMESTAMP DEFAULT NOW()
 );
 
+-- Add buttonPushes column if it doesn't exist (for existing databases)
+DO $$ 
+BEGIN 
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                 WHERE table_name='user_profiles' AND column_name='buttonPushes') THEN
+    ALTER TABLE user_profiles ADD COLUMN buttonPushes INT DEFAULT 0;
+  END IF;
+END $$;
+
 -- Quests table (Web3-based)
 CREATE TABLE IF NOT EXISTS quests (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -88,6 +97,22 @@ CREATE INDEX idx_spore_transactions_wallet ON spore_transactions(walletAddress);
 CREATE INDEX idx_participation_proofs_quest ON participation_proofs(questId);
 CREATE INDEX idx_wallet_connections_address ON wallet_connections(walletAddress);
 
+-- Daily Button Push Winners table
+CREATE TABLE IF NOT EXISTS daily_button_winners (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  userId BIGINT NOT NULL,
+  userName TEXT NOT NULL,
+  dailyPushes INT NOT NULL,
+  totalPushes INT NOT NULL,
+  rank INT NOT NULL,
+  winDate DATE NOT NULL,
+  createdAt TIMESTAMP DEFAULT NOW(),
+  UNIQUE(winDate) -- Only one winner per day
+);
+
+CREATE INDEX idx_daily_winners_date ON daily_button_winners(winDate DESC);
+CREATE INDEX idx_daily_winners_user ON daily_button_winners(userId);
+
 -- RLS Policies (if using Row Level Security)
 ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE quests ENABLE ROW LEVEL SECURITY;
@@ -119,3 +144,28 @@ GRANT ALL ON quests TO authenticated;
 GRANT ALL ON spore_transactions TO authenticated;
 GRANT SELECT ON user_profiles TO anon;
 GRANT SELECT ON quests TO anon;
+
+-- ============= SUPABASE FUNCTIONS =============
+
+-- Function to get daily wins leaderboard (aggregates wins per user)
+CREATE OR REPLACE FUNCTION get_daily_wins_leaderboard(row_limit INT DEFAULT 10)
+RETURNS TABLE (
+  userId BIGINT,
+  userName TEXT,
+  wins BIGINT,
+  lastWinDate DATE
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT 
+    dbw.userId,
+    MAX(dbw.userName) as userName,
+    COUNT(*)::BIGINT as wins,
+    MAX(dbw.winDate)::DATE as lastWinDate
+  FROM daily_button_winners dbw
+  GROUP BY dbw.userId
+  ORDER BY wins DESC, lastWinDate DESC
+  LIMIT row_limit;
+END;
+$$ LANGUAGE plpgsql;
+
