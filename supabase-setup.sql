@@ -113,7 +113,7 @@ CREATE TABLE IF NOT EXISTS daily_button_winners (
 CREATE INDEX idx_daily_winners_date ON daily_button_winners(win_date DESC);
 CREATE INDEX idx_daily_winners_user ON daily_button_winners(user_id);
 
--- RLS Policies (Strict: users only access their own wallet data)
+-- RLS Policies (Admin-only writes, public read for leaderboards)
 ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE quests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE spore_transactions ENABLE ROW LEVEL SECURITY;
@@ -125,84 +125,72 @@ ALTER TABLE daily_button_winners ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Public read leaderboard" ON user_profiles
   FOR SELECT USING (true);
 
--- Authenticated users can insert their own profile
-CREATE POLICY "Users can create own profile" ON user_profiles
-  FOR INSERT WITH CHECK (true);
+-- No user writes allowed (service role bypasses RLS)
+CREATE POLICY "No user insert" ON user_profiles
+  FOR INSERT WITH CHECK (false);
 
--- Users can only update their own profile (matched by wallet_address)
-CREATE POLICY "Users update own profile" ON user_profiles
-  FOR UPDATE USING (
-    wallet_address = current_setting('request.jwt.claims', true)::json->>'wallet_address'
-    OR true -- Allow service role / API key access
-  );
+CREATE POLICY "No user update" ON user_profiles
+  FOR UPDATE USING (false);
+
+CREATE POLICY "No user delete" ON user_profiles
+  FOR DELETE USING (false);
 
 -- ===== QUESTS POLICIES =====
 -- Public read access to quests
 CREATE POLICY "Public read quests" ON quests
   FOR SELECT USING (true);
 
--- Users can only create quests for their own wallet
-CREATE POLICY "Users create own quests" ON quests
-  FOR INSERT WITH CHECK (
-    wallet_address = current_setting('request.jwt.claims', true)::json->>'wallet_address'
-    OR true -- Allow service role / API key access
-  );
+-- No user writes allowed
+CREATE POLICY "No user insert quests" ON quests
+  FOR INSERT WITH CHECK (false);
 
--- Users can only update their own quests
-CREATE POLICY "Users update own quests" ON quests
-  FOR UPDATE USING (
-    wallet_address = current_setting('request.jwt.claims', true)::json->>'wallet_address'
-    OR true -- Allow service role / API key access
-  );
+CREATE POLICY "No user update quests" ON quests
+  FOR UPDATE USING (false);
+
+CREATE POLICY "No user delete quests" ON quests
+  FOR DELETE USING (false);
 
 -- ===== SPORE_TRANSACTIONS POLICIES =====
--- Users can only read their own transactions
-CREATE POLICY "Users read own transactions" ON spore_transactions
-  FOR SELECT USING (
-    wallet_address = current_setting('request.jwt.claims', true)::json->>'wallet_address'
-    OR true -- Allow public read for admin/analytics
-  );
+-- Public read access for transparency
+CREATE POLICY "Public read transactions" ON spore_transactions
+  FOR SELECT USING (true);
 
--- Users can only create transactions for their own wallet
-CREATE POLICY "Users create own transactions" ON spore_transactions
-  FOR INSERT WITH CHECK (
-    wallet_address = current_setting('request.jwt.claims', true)::json->>'wallet_address'
-    OR true -- Allow service role / API key access
-  );
+-- No user writes allowed
+CREATE POLICY "No user insert transactions" ON spore_transactions
+  FOR INSERT WITH CHECK (false);
 
 -- ===== PARTICIPATION_PROOFS POLICIES =====
--- Users can read their own participation proofs
-CREATE POLICY "Users read own proofs" ON participation_proofs
-  FOR SELECT USING (
-    wallet_address = current_setting('request.jwt.claims', true)::json->>'wallet_address'
-    OR true -- Allow public read for verification
-  );
+-- Public read access for verification
+CREATE POLICY "Public read proofs" ON participation_proofs
+  FOR SELECT USING (true);
 
--- Users can create proofs for their own wallet
-CREATE POLICY "Users create own proofs" ON participation_proofs
-  FOR INSERT WITH CHECK (
-    wallet_address = current_setting('request.jwt.claims', true)::json->>'wallet_address'
-    OR true -- Allow service role / API key access
-  );
+-- No user writes allowed
+CREATE POLICY "No user insert proofs" ON participation_proofs
+  FOR INSERT WITH CHECK (false);
+
+CREATE POLICY "No user update proofs" ON participation_proofs
+  FOR UPDATE USING (false);
 
 -- ===== DAILY_BUTTON_WINNERS POLICIES =====
 -- Public read access to daily winners (leaderboard)
 CREATE POLICY "Public read daily winners" ON daily_button_winners
   FOR SELECT USING (true);
 
--- Only service role can insert winners
-CREATE POLICY "Service insert winners" ON daily_button_winners
-  FOR INSERT WITH CHECK (true);
+-- No user writes allowed
+CREATE POLICY "No user insert winners" ON daily_button_winners
+  FOR INSERT WITH CHECK (false);
 
--- Grant permissions
+-- Grant permissions (service role bypasses RLS, anon gets read-only)
+GRANT SELECT ON user_profiles TO anon;
+GRANT SELECT ON quests TO anon;
+GRANT SELECT ON spore_transactions TO anon;
+GRANT SELECT ON participation_proofs TO anon;
+GRANT SELECT ON daily_button_winners TO anon;
 GRANT ALL ON user_profiles TO authenticated;
 GRANT ALL ON quests TO authenticated;
 GRANT ALL ON spore_transactions TO authenticated;
 GRANT ALL ON participation_proofs TO authenticated;
 GRANT ALL ON daily_button_winners TO authenticated;
-GRANT SELECT ON user_profiles TO anon;
-GRANT SELECT ON quests TO anon;
-GRANT SELECT ON daily_button_winners TO anon;
 
 -- ============= SUPABASE FUNCTIONS =============
 
