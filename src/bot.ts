@@ -998,8 +998,9 @@ Wallet: \`${walletAddress}\`
       //   await this.bot.pinChatMessage(announcementChatId, sentMsg.message_id);
       // }
       
-      // DO NOT RESET - Only admin can reset via kingmyco.com admin page
-      // this.buttonContest.resetDailyStats();
+      // Reset daily push counts every 24 hours when announcing winner
+      this.buttonContest.resetDailyStats();
+      console.log('[DAILY_WINNER] Daily push counts reset after winner announcement');
     } catch (error) {
       console.error('[DAILY_WINNER] Error announcing daily winner:', error);
     }
