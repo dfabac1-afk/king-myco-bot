@@ -3,99 +3,99 @@
 -- User Profiles table (wallet-based)
 CREATE TABLE IF NOT EXISTS user_profiles (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  walletAddress TEXT UNIQUE NOT NULL,
-  telegramUserId BIGINT UNIQUE,
-  telegramName TEXT,
-  totalSpores INT DEFAULT 0,
-  questsCompleted INT DEFAULT 0,
-  buttonPushes INT DEFAULT 0,
-  chainId INT DEFAULT 501,
+  wallet_address TEXT UNIQUE NOT NULL,
+  telegram_user_id BIGINT UNIQUE,
+  telegram_name TEXT,
+  total_spores INT DEFAULT 0,
+  quests_completed INT DEFAULT 0,
+  button_pushes INT DEFAULT 0,
+  chain_id INT DEFAULT 501,
   nonce TEXT,
-  isVerified BOOLEAN DEFAULT FALSE,
-  lastActiveAt TIMESTAMP DEFAULT NOW(),
-  createdAt TIMESTAMP DEFAULT NOW(),
-  updatedAt TIMESTAMP DEFAULT NOW()
+  is_verified BOOLEAN DEFAULT FALSE,
+  last_active_at TIMESTAMP DEFAULT NOW(),
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- Add buttonPushes column if it doesn't exist (for existing databases)
+-- Add button_pushes column if it doesn't exist (for existing databases)
 DO $$ 
 BEGIN 
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
-                 WHERE table_name='user_profiles' AND column_name='buttonPushes') THEN
-    ALTER TABLE user_profiles ADD COLUMN buttonPushes INT DEFAULT 0;
+                 WHERE table_name='user_profiles' AND column_name='button_pushes') THEN
+    ALTER TABLE user_profiles ADD COLUMN button_pushes INT DEFAULT 0;
   END IF;
 END $$;
 
 -- Quests table (Web3-based)
 CREATE TABLE IF NOT EXISTS quests (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  walletAddress TEXT NOT NULL,
+  wallet_address TEXT NOT NULL,
   title TEXT NOT NULL,
   description TEXT,
   reward INT NOT NULL,
-  questType TEXT DEFAULT 'general',
-  contractAddress TEXT,
-  chainId INT DEFAULT 501,
+  quest_type TEXT DEFAULT 'general',
+  contract_address TEXT,
+  chain_id INT DEFAULT 501,
   started BOOLEAN DEFAULT FALSE,
   completed BOOLEAN DEFAULT FALSE,
-  completedAt TIMESTAMP,
-  participationProof TEXT,
-  transactionHash TEXT,
-  createdAt TIMESTAMP DEFAULT NOW(),
-  FOREIGN KEY (walletAddress) REFERENCES user_profiles(walletAddress) ON DELETE CASCADE
+  completed_at TIMESTAMP,
+  participation_proof TEXT,
+  transaction_hash TEXT,
+  created_at TIMESTAMP DEFAULT NOW(),
+  FOREIGN KEY (wallet_address) REFERENCES user_profiles(wallet_address) ON DELETE CASCADE
 );
 
 -- Wallet connections (support for multiple wallets per user if needed)
 CREATE TABLE IF NOT EXISTS wallet_connections (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  userId UUID NOT NULL,
-  walletAddress TEXT NOT NULL,
-  chainId INT DEFAULT 501,
-  verificationSignature TEXT,
-  isVerified BOOLEAN DEFAULT FALSE,
-  connectedAt TIMESTAMP DEFAULT NOW(),
-  FOREIGN KEY (userId) REFERENCES user_profiles(id) ON DELETE CASCADE,
-  UNIQUE(userId, walletAddress, chainId)
+  user_id UUID NOT NULL,
+  wallet_address TEXT NOT NULL,
+  chain_id INT DEFAULT 501,
+  verification_signature TEXT,
+  is_verified BOOLEAN DEFAULT FALSE,
+  connected_at TIMESTAMP DEFAULT NOW(),
+  FOREIGN KEY (user_id) REFERENCES user_profiles(id) ON DELETE CASCADE,
+  UNIQUE(user_id, wallet_address, chain_id)
 );
 
 -- Spore transactions log (audit trail with wallet)
 CREATE TABLE IF NOT EXISTS spore_transactions (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  walletAddress TEXT NOT NULL,
+  wallet_address TEXT NOT NULL,
   amount INT NOT NULL,
   reason TEXT,
-  questId UUID,
-  transactionHash TEXT,
-  chainId INT DEFAULT 501,
+  quest_id UUID,
+  transaction_hash TEXT,
+  chain_id INT DEFAULT 501,
   timestamp TIMESTAMP DEFAULT NOW(),
-  FOREIGN KEY (walletAddress) REFERENCES user_profiles(walletAddress) ON DELETE CASCADE,
-  FOREIGN KEY (questId) REFERENCES quests(id) ON DELETE SET NULL
+  FOREIGN KEY (wallet_address) REFERENCES user_profiles(wallet_address) ON DELETE CASCADE,
+  FOREIGN KEY (quest_id) REFERENCES quests(id) ON DELETE SET NULL
 );
 
 -- On-chain proof of participation
 CREATE TABLE IF NOT EXISTS participation_proofs (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  questId UUID NOT NULL,
-  walletAddress TEXT NOT NULL,
-  proofType TEXT,
-  proofData JSONB,
-  transactionHash TEXT,
+  quest_id UUID NOT NULL,
+  wallet_address TEXT NOT NULL,
+  proof_type TEXT,
+  proof_data JSONB,
+  transaction_hash TEXT,
   verified BOOLEAN DEFAULT FALSE,
-  chainId INT DEFAULT 501,
-  createdAt TIMESTAMP DEFAULT NOW(),
-  FOREIGN KEY (questId) REFERENCES quests(id) ON DELETE CASCADE,
-  FOREIGN KEY (walletAddress) REFERENCES user_profiles(walletAddress) ON DELETE CASCADE
+  chain_id INT DEFAULT 501,
+  created_at TIMESTAMP DEFAULT NOW(),
+  FOREIGN KEY (quest_id) REFERENCES quests(id) ON DELETE CASCADE,
+  FOREIGN KEY (wallet_address) REFERENCES user_profiles(wallet_address) ON DELETE CASCADE
 );
 
 -- Indexes for performance
-CREATE INDEX idx_user_profiles_spores ON user_profiles(totalSpores DESC);
-CREATE INDEX idx_user_profiles_wallet ON user_profiles(walletAddress);
-CREATE INDEX idx_user_profiles_telegram ON user_profiles(telegramUserId);
-CREATE INDEX idx_quests_wallet_completed ON quests(walletAddress, completed);
-CREATE INDEX idx_quests_contract ON quests(contractAddress, chainId);
-CREATE INDEX idx_spore_transactions_wallet ON spore_transactions(walletAddress);
-CREATE INDEX idx_participation_proofs_quest ON participation_proofs(questId);
-CREATE INDEX idx_wallet_connections_address ON wallet_connections(walletAddress);
+CREATE INDEX idx_user_profiles_spores ON user_profiles(total_spores DESC);
+CREATE INDEX idx_user_profiles_wallet ON user_profiles(wallet_address);
+CREATE INDEX idx_user_profiles_telegram ON user_profiles(telegram_user_id);
+CREATE INDEX idx_quests_wallet_completed ON quests(wallet_address, completed);
+CREATE INDEX idx_quests_contract ON quests(contract_address, chain_id);
+CREATE INDEX idx_spore_transactions_wallet ON spore_transactions(wallet_address);
+CREATE INDEX idx_participation_proofs_quest ON participation_proofs(quest_id);
+CREATE INDEX idx_wallet_connections_address ON wallet_connections(wallet_address);
 
 -- Daily Button Push Winners table
 CREATE TABLE IF NOT EXISTS daily_button_winners (

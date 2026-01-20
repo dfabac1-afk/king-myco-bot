@@ -66,7 +66,7 @@ export class SupabaseIntegration {
       const { data, error } = await this.supabase
         .from('user_profiles')
         .select('*')
-        .eq('walletAddress', walletAddress.toLowerCase())
+        .eq('wallet_address', walletAddress.toLowerCase())
         .single();
 
       if (error && error.code !== 'PGRST116') {
@@ -94,11 +94,11 @@ export class SupabaseIntegration {
         .from('user_profiles')
         .insert([
           {
-            walletAddress: walletAddress.toLowerCase(),
-            telegramUserId,
-            totalSpores: 0,
-            questsCompleted: 0,
-            isVerified: false,
+            wallet_address: walletAddress.toLowerCase(),
+            telegram_user_id: telegramUserId,
+            total_spores: 0,
+            quests_completed: 0,
+            is_verified: false,
           },
         ])
         .select()
@@ -118,10 +118,10 @@ export class SupabaseIntegration {
       const { error } = await this.supabase
         .from('user_profiles')
         .update({
-          telegramUserId,
-          telegramName,
+          telegram_user_id: telegramUserId,
+          telegram_name: telegramName,
         })
-        .eq('walletAddress', walletAddress.toLowerCase());
+        .eq('wallet_address', walletAddress.toLowerCase());
 
       if (error) throw error;
       return true;
@@ -142,7 +142,7 @@ export class SupabaseIntegration {
       const { error } = await this.supabase
         .from('user_profiles')
         .update({ nonce })
-        .eq('walletAddress', walletAddress.toLowerCase());
+        .eq('wallet_address', walletAddress.toLowerCase());
 
       if (error) throw error;
       return nonce;
@@ -157,8 +157,8 @@ export class SupabaseIntegration {
     try {
       const { data, error } = await this.supabase
         .from('user_profiles')
-        .update({ isVerified: true })
-        .eq('walletAddress', walletAddress.toLowerCase())
+        .update({ is_verified: true })
+        .eq('wallet_address', walletAddress.toLowerCase())
         .eq('nonce', nonce)
         .select()
         .single();
@@ -182,20 +182,20 @@ export class SupabaseIntegration {
       // Update spores
       const { error: updateError } = await this.supabase
         .from('user_profiles')
-        .update({ totalSpores: profile.totalSpores + amount })
-        .eq('walletAddress', walletAddress.toLowerCase());
+        .update({ total_spores: profile.totalSpores + amount })
+        .eq('wallet_address', walletAddress.toLowerCase());
 
       if (updateError) throw updateError;
 
       // Log transaction
       await this.supabase.from('spore_transactions').insert([
         {
-          walletAddress: walletAddress.toLowerCase(),
+          wallet_address: walletAddress.toLowerCase(),
           amount,
           reason,
-          questId,
-          transactionHash: txHash,
-          chainId: 501,
+          quest_id: questId,
+          transaction_hash: txHash,
+          chain_id: 501,
         },
       ]);
     } catch (e) {
@@ -230,13 +230,13 @@ export class SupabaseIntegration {
         .from('quests')
         .insert([
           {
-            walletAddress: walletAddress.toLowerCase(),
+            wallet_address: walletAddress.toLowerCase(),
             title,
             description,
             reward,
-            questType,
-            contractAddress,
-            chainId: 501,
+            quest_type: questType,
+            contract_address: contractAddress,
+            chain_id: 501,
             completed: false,
             started: false,
           },
@@ -265,11 +265,11 @@ export class SupabaseIntegration {
         .from('quests')
         .update({
           completed: true,
-          completedAt: new Date(),
-          transactionHash: txHash,
+          completed_at: new Date(),
+          transaction_hash: txHash,
         })
         .eq('id', questId)
-        .eq('walletAddress', walletAddress.toLowerCase())
+        .eq('wallet_address', walletAddress.toLowerCase())
         .select()
         .single();
 
@@ -279,11 +279,11 @@ export class SupabaseIntegration {
       if (proofData) {
         await this.supabase.from('participation_proofs').insert([
           {
-            questId,
-            walletAddress: walletAddress.toLowerCase(),
-            proofType: 'on-chain',
-            proofData,
-            transactionHash: txHash,
+            quest_id: questId,
+            wallet_address: walletAddress.toLowerCase(),
+            proof_type: 'on-chain',
+            proof_data: proofData,
+            transaction_hash: txHash,
             verified: !!txHash,
           },
         ]);
@@ -297,8 +297,8 @@ export class SupabaseIntegration {
       if (profile) {
         await this.supabase
           .from('user_profiles')
-          .update({ questsCompleted: profile.questsCompleted + 1 })
-          .eq('walletAddress', walletAddress.toLowerCase());
+          .update({ quests_completed: profile.questsCompleted + 1 })
+          .eq('wallet_address', walletAddress.toLowerCase());
       }
 
       return true;
@@ -314,13 +314,13 @@ export class SupabaseIntegration {
       let query = this.supabase
         .from('quests')
         .select('*')
-        .eq('walletAddress', walletAddress.toLowerCase());
+        .eq('wallet_address', walletAddress.toLowerCase());
 
       if (completed !== undefined) {
         query = query.eq('completed', completed);
       }
 
-      const { data, error } = await query.order('createdAt', { ascending: false });
+      const { data, error } = await query.order('created_at', { ascending: false });
 
       if (error) throw error;
       return data || [];
@@ -336,8 +336,8 @@ export class SupabaseIntegration {
       const { data, error } = await this.supabase
         .from('participation_proofs')
         .select('*')
-        .eq('questId', questId)
-        .eq('walletAddress', walletAddress.toLowerCase())
+        .eq('quest_id', questId)
+        .eq('wallet_address', walletAddress.toLowerCase())
         .single();
 
       if (error && error.code !== 'PGRST116') {
@@ -359,7 +359,7 @@ export class SupabaseIntegration {
       const { data, error } = await this.supabase
         .from('user_profiles')
         .select('*')
-        .order('totalSpores', { ascending: false })
+        .order('total_spores', { ascending: false })
         .limit(limit);
 
       if (error) throw error;
@@ -378,9 +378,9 @@ export class SupabaseIntegration {
 
       const { data, error } = await this.supabase
         .from('user_profiles')
-        .select('walletAddress')
-        .gt('totalSpores', profile.totalSpores)
-        .order('totalSpores', { ascending: false });
+        .select('wallet_address')
+        .gt('total_spores', profile.totalSpores)
+        .order('total_spores', { ascending: false });
 
       if (error) throw error;
       
@@ -554,13 +554,13 @@ export class SupabaseIntegration {
         const { data, error } = await this.supabase
           .from('user_profiles')
           .insert([{
-            walletAddress: pseudoWallet,
-            telegramUserId: userId,
-            telegramName: userName,
-            totalSpores: sporesEarned,
-            buttonPushes: 1,
-            questsCompleted: 0,
-            isVerified: false,
+            wallet_address: pseudoWallet,
+            telegram_user_id: userId,
+            telegram_name: userName,
+            total_spores: sporesEarned,
+            button_pushes: 1,
+            quests_completed: 0,
+            is_verified: false,
           }])
           .select()
           .single();
@@ -573,11 +573,11 @@ export class SupabaseIntegration {
       const { error } = await this.supabase
         .from('user_profiles')
         .update({
-          totalSpores: profile.totalSpores + sporesEarned,
-          buttonPushes: (profile as any).buttonPushes ? (profile as any).buttonPushes + 1 : 1,
-          telegramName: userName, // Update name in case it changed
+          total_spores: profile.totalSpores + sporesEarned,
+          button_pushes: (profile as any).buttonPushes ? (profile as any).buttonPushes + 1 : 1,
+          telegram_name: userName, // Update name in case it changed
         })
-        .eq('walletAddress', pseudoWallet);
+        .eq('wallet_address', pseudoWallet);
 
       if (error) throw error;
       return true;
