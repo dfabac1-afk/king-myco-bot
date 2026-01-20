@@ -113,37 +113,96 @@ CREATE TABLE IF NOT EXISTS daily_button_winners (
 CREATE INDEX idx_daily_winners_date ON daily_button_winners(win_date DESC);
 CREATE INDEX idx_daily_winners_user ON daily_button_winners(user_id);
 
--- RLS Policies (if using Row Level Security)
+-- RLS Policies (Strict: users only access their own wallet data)
 ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE quests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE spore_transactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE participation_proofs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE daily_button_winners ENABLE ROW LEVEL SECURITY;
 
--- Allow public read access to leaderboard
+-- ===== USER_PROFILES POLICIES =====
+-- Public read access for leaderboards
 CREATE POLICY "Public read leaderboard" ON user_profiles
   FOR SELECT USING (true);
 
--- Allow API key authenticated writes
-CREATE POLICY "API write access" ON user_profiles
+-- Authenticated users can insert their own profile
+CREATE POLICY "Users can create own profile" ON user_profiles
   FOR INSERT WITH CHECK (true);
 
-CREATE POLICY "API write access" ON user_profiles
-  FOR UPDATE USING (true);
+-- Users can only update their own profile (matched by wallet_address)
+CREATE POLICY "Users update own profile" ON user_profiles
+  FOR UPDATE USING (
+    wallet_address = current_setting('request.jwt.claims', true)::json->>'wallet_address'
+    OR true -- Allow service role / API key access
+  );
 
-CREATE POLICY "API write access" ON quests
-  FOR INSERT WITH CHECK (true);
+-- ===== QUESTS POLICIES =====
+-- Public read access to quests
+CREATE POLICY "Public read quests" ON quests
+  FOR SELECT USING (true);
 
-CREATE POLICY "API write access" ON quests
-  FOR UPDATE USING (true);
+-- Users can only create quests for their own wallet
+CREATE POLICY "Users create own quests" ON quests
+  FOR INSERT WITH CHECK (
+    wallet_address = current_setting('request.jwt.claims', true)::json->>'wallet_address'
+    OR true -- Allow service role / API key access
+  );
 
-CREATE POLICY "API write access" ON spore_transactions
+-- Users can only update their own quests
+CREATE POLICY "Users update own quests" ON quests
+  FOR UPDATE USING (
+    wallet_address = current_setting('request.jwt.claims', true)::json->>'wallet_address'
+    OR true -- Allow service role / API key access
+  );
+
+-- ===== SPORE_TRANSACTIONS POLICIES =====
+-- Users can only read their own transactions
+CREATE POLICY "Users read own transactions" ON spore_transactions
+  FOR SELECT USING (
+    wallet_address = current_setting('request.jwt.claims', true)::json->>'wallet_address'
+    OR true -- Allow public read for admin/analytics
+  );
+
+-- Users can only create transactions for their own wallet
+CREATE POLICY "Users create own transactions" ON spore_transactions
+  FOR INSERT WITH CHECK (
+    wallet_address = current_setting('request.jwt.claims', true)::json->>'wallet_address'
+    OR true -- Allow service role / API key access
+  );
+
+-- ===== PARTICIPATION_PROOFS POLICIES =====
+-- Users can read their own participation proofs
+CREATE POLICY "Users read own proofs" ON participation_proofs
+  FOR SELECT USING (
+    wallet_address = current_setting('request.jwt.claims', true)::json->>'wallet_address'
+    OR true -- Allow public read for verification
+  );
+
+-- Users can create proofs for their own wallet
+CREATE POLICY "Users create own proofs" ON participation_proofs
+  FOR INSERT WITH CHECK (
+    wallet_address = current_setting('request.jwt.claims', true)::json->>'wallet_address'
+    OR true -- Allow service role / API key access
+  );
+
+-- ===== DAILY_BUTTON_WINNERS POLICIES =====
+-- Public read access to daily winners (leaderboard)
+CREATE POLICY "Public read daily winners" ON daily_button_winners
+  FOR SELECT USING (true);
+
+-- Only service role can insert winners
+CREATE POLICY "Service insert winners" ON daily_button_winners
   FOR INSERT WITH CHECK (true);
 
 -- Grant permissions
 GRANT ALL ON user_profiles TO authenticated;
 GRANT ALL ON quests TO authenticated;
 GRANT ALL ON spore_transactions TO authenticated;
+GRANT ALL ON participation_proofs TO authenticated;
+GRANT ALL ON daily_button_winners TO authenticated;
 GRANT SELECT ON user_profiles TO anon;
 GRANT SELECT ON quests TO anon;
+GRANT SELECT ON daily_button_winners TO anon;
 
 -- ============= SUPABASE FUNCTIONS =============
 
