@@ -312,6 +312,32 @@ export class ApiServer {
         res.status(500).json({ success: false, error: 'Failed to add spores' });
       }
     });
+
+    // ============= ADMIN CONTROLS =============
+
+    // POST /api/admin/reset-daily-stats - Reset daily button push counts (ADMIN ONLY)
+    this.app.post('/api/admin/reset-daily-stats', async (req: Request, res: Response) => {
+      try {
+        if (!this.bot || !this.bot.buttonContest) {
+          return res.status(500).json({
+            success: false,
+            error: 'Button contest service not available',
+          });
+        }
+
+        // Call the reset method
+        this.bot.buttonContest.resetDailyStats();
+
+        res.json({
+          success: true,
+          message: 'Daily button push stats have been reset',
+          timestamp: new Date().toISOString(),
+        });
+      } catch (error) {
+        console.error('Reset daily stats error:', error);
+        res.status(500).json({ success: false, error: 'Failed to reset daily stats' });
+      }
+    });
   }
 
   start(): void {

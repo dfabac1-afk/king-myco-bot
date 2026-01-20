@@ -10,7 +10,7 @@ export class KingMycoBot {
   private dexScreener: DexScreenerService;
   private openai: OpenAIService;
   private conversationHistory: Map<number, ChatMessage[]> = new Map();
-  private buttonContest: ButtonContestService;
+  public buttonContest: ButtonContestService; // Public for API access
   private supabase: SupabaseIntegration | null;
 
   constructor(botToken: string, openaiKey: string, supabase?: SupabaseIntegration | null) {
@@ -998,8 +998,8 @@ Wallet: \`${walletAddress}\`
       //   await this.bot.pinChatMessage(announcementChatId, sentMsg.message_id);
       // }
       
-      // Reset daily stats
-      this.buttonContest.resetDailyStats();
+      // DO NOT RESET - Only admin can reset via kingmyco.com admin page
+      // this.buttonContest.resetDailyStats();
     } catch (error) {
       console.error('[DAILY_WINNER] Error announcing daily winner:', error);
     }
