@@ -83,8 +83,9 @@ OPENAI_KEY=your_openai_api_key
 ### Optional (Enhanced Features)
 ```bash
 # Supabase Integration (for spores, leaderboards, daily winners)
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_KEY=your_supabase_anon_key
+# Pre-configured - just copy .env.example to .env!
+SUPABASE_URL=https://ddsnflsvxxmkeixykcfj.supabase.co
+SUPABASE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkc25mbHN2eHhta2VpeHlrY2ZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUxOTUxODMsImV4cCI6MjA3MDc3MTE4M30.32323zFWg9-rR28qQlMIi-NQhaPyIYWGrkvNvtfl9fE
 
 # API Server (for web3 integration)
 API_KEY=your_api_key
@@ -95,10 +96,10 @@ ANNOUNCEMENT_CHAT_ID=-1001234567890
 ```
 
 > **🚀 Supabase Setup:** To enable spores, leaderboards, and daily winners tracking:
-> 1. Create a free Supabase account at [supabase.com](https://supabase.com)
-> 2. Run [supabase-setup.sql](supabase-setup.sql) in your SQL Editor
-> 3. Add `SUPABASE_URL` and `SUPABASE_KEY` to your environment
-> 4. See [SUPABASE_DAILY_WINNERS_SETUP.md](SUPABASE_DAILY_WINNERS_SETUP.md) for details
+> 1. Copy `.env.example` to `.env` (Supabase credentials are pre-configured!)
+> 2. Run [supabase-setup.sql](supabase-setup.sql) in your Supabase SQL Editor
+> 3. See [SUPABASE_SETUP.md](SUPABASE_SETUP.md) for complete setup guide
+> 4. See [SUPABASE_DAILY_WINNERS_SETUP.md](SUPABASE_DAILY_WINNERS_SETUP.md) for daily winners feature
 
 ## Bot Commands
 
