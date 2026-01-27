@@ -2,6 +2,17 @@
 
 This guide explains how to set up and verify the Supabase integration for the King Myco Bot.
 
+## 🔒 About the Shared Database
+
+**Important:** This bot uses a **shared, community Supabase database**. The credentials in `.env.example` are intentionally public and connect all bot instances to the same database for:
+- Shared leaderboards across all King Myco bot users
+- Community-wide spore tracking
+- Unified quest system
+
+The database is protected by **Row Level Security (RLS)** policies that only allow read access. The anon key is safe to share publicly - this is standard Supabase practice for client-side applications.
+
+> 💡 **Want your own database?** See the "Custom Supabase Project" section below.
+
 ## Prerequisites
 
 - A Supabase account (free tier is sufficient)

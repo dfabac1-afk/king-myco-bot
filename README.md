@@ -83,7 +83,8 @@ OPENAI_KEY=your_openai_api_key
 ### Optional (Enhanced Features)
 ```bash
 # Supabase Integration (for spores, leaderboards, daily winners)
-# Pre-configured - just copy .env.example to .env!
+# Pre-configured with SHARED community database (credentials are intentionally public)
+# Protected by Row Level Security - see SUPABASE_SETUP.md for details
 SUPABASE_URL=https://ddsnflsvxxmkeixykcfj.supabase.co
 SUPABASE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkc25mbHN2eHhta2VpeHlrY2ZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUxOTUxODMsImV4cCI6MjA3MDc3MTE4M30.32323zFWg9-rR28qQlMIi-NQhaPyIYWGrkvNvtfl9fE
 
